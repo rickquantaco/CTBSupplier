@@ -1,0 +1,69 @@
+@model IEnumerable<CTBSupplier.Web.Models.Supplier>
+@{
+    ViewData["Title"] = "Suppliers";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Suppliers</h2>
+    <a asp-action="Create" class="btn btn-primary">+ New Supplier</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width:60px;"></th>
+            <th>Supplier Name</th>
+            <th>ABN</th>
+            <th>Category</th>
+            <th>Website</th>
+            <th>Active</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td class="text-center">
+                    @if (!string.IsNullOrWhiteSpace(s.SupplierImage))
+                    {
+                        <img src="@s.SupplierImage" alt="@s.SupplierName"
+                             style="width:48px;height:48px;object-fit:contain;border-radius:4px;" />
+                    }
+                    else
+                    {
+                        <span class="d-inline-flex align-items-center justify-content-center bg-secondary text-white rounded"
+                              style="width:48px;height:48px;font-size:1.2rem;" title="No image">&#128722;</span>
+                    }
+                </td>
+                <td>@s.SupplierName</td>
+                <td>@s.SupplierAbn</td>
+                <td>@s.SupplierCategory</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(s.Website))
+                    {
+                        <a href="@s.Website" target="_blank" rel="noopener">@s.Website</a>
+                    }
+                </td>
+                <td>
+                    @if (s.IsActive)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@s.SupplierGUID" class="btn btn-sm btn-outline-info">Details</a>
+                    <a asp-action="Edit" asp-route-id="@s.SupplierGUID" class="btn btn-sm btn-outline-primary">Edit</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted">No suppliers found.</td></tr>
+        }
+    </tbody>
+</table>

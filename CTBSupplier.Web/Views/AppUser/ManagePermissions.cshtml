@@ -1,0 +1,42 @@
+@model CTBSupplier.Web.Models.ManagePermissionsViewModel
+@{
+    ViewData["Title"] = "Manage Permissions";
+}
+
+<h2>Manage Permissions</h2>
+<p class="text-muted">
+    User: <strong>@Model.UserRealName</strong> &lt;@Model.UserEmail&gt;
+</p>
+
+<form asp-action="ManagePermissions" asp-route-id="@Model.AppUserId" method="post">
+    <input type="hidden" asp-for="AppUserId" />
+    <input type="hidden" asp-for="UserRealName" />
+    <input type="hidden" asp-for="UserEmail" />
+
+    <div class="card" style="max-width:500px;">
+        <div class="card-header">Permissions</div>
+        <ul class="list-group list-group-flush">
+            @for (int i = 0; i < Model.Permissions.Count; i++)
+            {
+                <li class="list-group-item">
+                    <input type="hidden" asp-for="Permissions[i].AppPermissionId" />
+                    <input type="hidden" asp-for="Permissions[i].Description" />
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               asp-for="Permissions[i].IsGranted"
+                               id="perm_@Model.Permissions[i].AppPermissionId" />
+                        <label class="form-check-label" for="perm_@Model.Permissions[i].AppPermissionId">
+                            @Model.Permissions[i].Description
+                        </label>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

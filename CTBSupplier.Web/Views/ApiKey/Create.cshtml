@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Generate API Key";
+}
+
+<h2>Generate API Key</h2>
+
+<div class="row">
+    <div class="col-md-5">
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label for="keyName" class="form-label">Key Name <span class="text-muted small">(e.g. "Mobile App", "Partner Portal")</span></label>
+                <input type="text" name="keyName" id="keyName" class="form-control"
+                       maxlength="100" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Generate</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

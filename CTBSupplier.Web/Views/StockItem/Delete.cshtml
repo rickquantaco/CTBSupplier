@@ -1,0 +1,26 @@
+@model CTBSupplier.Web.Models.StockItem
+@{
+    ViewData["Title"] = "Delete Stock Item";
+}
+
+<h2>Delete Stock Item</h2>
+<div class="alert alert-danger">Are you sure you want to delete this stock item?</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Stock Code</dt>
+    <dd class="col-sm-9">@Model.StockCode</dd>
+
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@Model.StockDesc</dd>
+
+    <dt class="col-sm-3">Supplier</dt>
+    <dd class="col-sm-9">@Model.Supplier?.SupplierName</dd>
+
+    <dt class="col-sm-3">Cost</dt>
+    <dd class="col-sm-9">@Model.SupplierCost.ToString("C")</dd>
+</dl>
+
+<form asp-action="Delete" asp-route-supplierGuid="@Model.SupplierGUID" asp-route-stockCode="@Model.StockCode" method="post">
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-controller="Supplier" asp-action="Details" asp-route-id="@Model.SupplierGUID" class="btn btn-secondary">Cancel</a>
+</form>

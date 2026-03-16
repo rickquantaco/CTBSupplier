@@ -1,0 +1,180 @@
+@model CTBSupplier.Web.Models.SupplierDetailsViewModel
+@{
+    ViewData["Title"] = Model.Supplier.SupplierName;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Supplier.SupplierName</h2>
+    <a asp-action="Edit" asp-route-id="@Model.Supplier.SupplierGUID" class="btn btn-outline-primary">Edit Supplier</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-2">ABN</dt>
+            <dd class="col-sm-4">@Model.Supplier.SupplierAbn</dd>
+
+            <dt class="col-sm-2">Active</dt>
+            <dd class="col-sm-4">
+                @if (Model.Supplier.IsActive)
+                {
+                    <span class="badge bg-success">Yes</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">No</span>
+                }
+            </dd>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Supplier.SupplierCategory))
+            {
+                <dt class="col-sm-2">Category</dt>
+                <dd class="col-sm-4">@Model.Supplier.SupplierCategory</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Supplier.SupplierDescription))
+            {
+                <dt class="col-sm-2">Description</dt>
+                <dd class="col-sm-10">@Model.Supplier.SupplierDescription</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Supplier.Website))
+            {
+                <dt class="col-sm-2">Website</dt>
+                <dd class="col-sm-10">
+                    <a href="@Model.Supplier.Website" target="_blank" rel="noopener">@Model.Supplier.Website</a>
+                </dd>
+            }
+        </dl>
+    </div>
+</div>
+
+@* Stock Items section *@
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4>Stock Items <small class="text-muted fs-6">(@Model.TotalCount total)</small></h4>
+    <a asp-controller="StockItem" asp-action="Create" asp-route-supplierGuid="@Model.Supplier.SupplierGUID"
+       class="btn btn-sm btn-primary">+ New Stock Item</a>
+</div>
+
+@* Filters *@
+<form method="get" asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID" class="row g-2 align-items-end mb-3">
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <div class="col-auto">
+        <label class="form-label mb-1 small text-muted">Brand</label>
+        <select name="filterBrand" class="form-select form-select-sm">
+            <option value="">All brands</option>
+            @foreach (var b in Model.AvailableBrands)
+            {
+                <option value="@b" selected="@(Model.FilterBrand == b)">@b</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-1 small text-muted">Category</label>
+        <select name="filterCategory" class="form-select form-select-sm">
+            <option value="">All categories</option>
+            @foreach (var c in Model.AvailableCategories)
+            {
+                <option value="@c" selected="@(Model.FilterCategory == c)">@c</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+        @if (Model.FilterBrand != null || Model.FilterCategory != null)
+        {
+            <a asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID"
+               asp-route-pageSize="@Model.PageSize" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+        }
+    </div>
+</form>
+
+@* Page size selector *@
+<div class="d-flex align-items-center gap-2 mb-3">
+    <span class="text-muted small">Per page:</span>
+    @foreach (var size in new[] { 25, 50, 100 })
+    {
+        if (Model.PageSize == size)
+        {
+            <span class="btn btn-sm btn-dark disabled">@size</span>
+        }
+        else
+        {
+            <a asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID"
+               asp-route-page="1" asp-route-pageSize="@size"
+               asp-route-filterBrand="@Model.FilterBrand"
+               asp-route-filterCategory="@Model.FilterCategory"
+               class="btn btn-sm btn-outline-secondary">@size</a>
+        }
+    }
+</div>
+
+<table class="table table-sm table-striped table-hover">
+    <thead class="table-secondary">
+        <tr>
+            <th>Stock Code</th>
+            <th>Description</th>
+            <th>Brand</th>
+            <th>Supplier Code</th>
+            <th>Cost</th>
+            <th>Unit</th>
+            <th>Category</th>
+            <th>GST</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.StockItems)
+        {
+            <tr>
+                <td>
+                    <a asp-controller="StockItem" asp-action="Edit"
+                       asp-route-supplierGuid="@item.SupplierGUID"
+                       asp-route-stockCode="@item.StockCode">@item.StockCode</a>
+                </td>
+                <td>@item.StockDesc</td>
+                <td>@item.BrandName</td>
+                <td>@item.SupplierStockCode</td>
+                <td>@item.SupplierCost.ToString("C")</td>
+                <td>@item.StockUnit @item.UnitOfMeasurementName</td>
+                <td>@item.StockCategoryName</td>
+                <td>@(item.IsGstApplied ? "Yes" : "No")</td>
+            </tr>
+        }
+        @if (!Model.StockItems.Any())
+        {
+            <tr><td colspan="8" class="text-center text-muted">No stock items for this supplier.</td></tr>
+        }
+    </tbody>
+</table>
+
+@* Pagination controls *@
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Stock item pages">
+        <ul class="pagination pagination-sm">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID"
+                   asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize"
+                   asp-route-filterBrand="@Model.FilterBrand" asp-route-filterCategory="@Model.FilterCategory">&#8249;</a>
+            </li>
+            @for (int p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID"
+                       asp-route-page="@p" asp-route-pageSize="@Model.PageSize"
+                       asp-route-filterBrand="@Model.FilterBrand" asp-route-filterCategory="@Model.FilterCategory">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Details" asp-route-id="@Model.Supplier.SupplierGUID"
+                   asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize"
+                   asp-route-filterBrand="@Model.FilterBrand" asp-route-filterCategory="@Model.FilterCategory">&#8250;</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<div class="mt-2">
+    <a asp-action="Index" class="btn btn-secondary">Back to Suppliers</a>
+</div>
+

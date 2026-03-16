@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "API Key Generated";
+    string newKey  = ViewBag.NewKey;
+    string keyName = ViewBag.KeyName;
+}
+
+<h2>API Key Generated</h2>
+
+<div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+    <span style="font-size:1.4rem;">&#9888;</span>
+    <div>
+        <strong>Copy this key now.</strong>
+        It will <strong>never be shown again</strong> — only its hash is stored in the database.
+    </div>
+</div>
+
+<div class="card mb-4" style="max-width:600px;">
+    <div class="card-header">Key: <strong>@keyName</strong></div>
+    <div class="card-body">
+        <div class="input-group">
+            <input type="text" id="apiKeyValue" class="form-control font-monospace"
+                   value="@newKey" readonly />
+            <button class="btn btn-outline-secondary" type="button" onclick="copyKey()">
+                Copy
+            </button>
+        </div>
+        <div id="copyConfirm" class="text-success small mt-1" style="display:none;">Copied!</div>
+    </div>
+</div>
+
+<p class="text-muted">
+    Use this key in the <code>X-API-Key</code> header of every API request:
+</p>
+<pre class="bg-light p-3 rounded"><code>GET /api/v1/suppliers
+X-API-Key: @newKey</code></pre>
+
+<a asp-action="Index" class="btn btn-primary mt-3">Back to API Keys</a>
+
+@section Scripts {
+    <script>
+        function copyKey() {
+            var el = document.getElementById('apiKeyValue');
+            el.select();
+            document.execCommand('copy');
+            var confirm = document.getElementById('copyConfirm');
+            confirm.style.display = 'block';
+            setTimeout(function () { confirm.style.display = 'none'; }, 2000);
+        }
+    </script>
+}

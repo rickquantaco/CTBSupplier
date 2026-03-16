@@ -1,0 +1,41 @@
+@model IEnumerable<CTBSupplier.Web.Models.LoginHistory>
+@{
+    ViewData["Title"] = "Login History";
+}
+
+<h2>Login History <small class="text-muted fs-6">(last 500 records)</small></h2>
+
+<table class="table table-sm table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Login Name</th>
+            <th>Attempted At (UTC)</th>
+            <th>Result</th>
+            <th>IP Address</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var h in Model)
+        {
+            <tr>
+                <td>@h.LoginName</td>
+                <td>@h.AttemptedAt.ToString("dd MMM yyyy HH:mm:ss")</td>
+                <td>
+                    @if (h.IsSuccess)
+                    {
+                        <span class="badge bg-success">Success</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Failed</span>
+                    }
+                </td>
+                <td>@h.IpAddress</td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="4" class="text-center text-muted">No login history found.</td></tr>
+        }
+    </tbody>
+</table>

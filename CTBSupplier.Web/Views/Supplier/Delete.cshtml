@@ -1,0 +1,24 @@
+@model CTBSupplier.Web.Models.Supplier
+@{
+    ViewData["Title"] = "Delete Supplier";
+}
+
+<h2>Delete Supplier</h2>
+<div class="alert alert-danger">Are you sure you want to delete this supplier?</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Supplier Name</dt>
+    <dd class="col-sm-9">@Model.SupplierName</dd>
+
+    <dt class="col-sm-3">ABN</dt>
+    <dd class="col-sm-9">@Model.SupplierAbn</dd>
+
+    <dt class="col-sm-3">Website</dt>
+    <dd class="col-sm-9">@Model.Website</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="SupplierGUID" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

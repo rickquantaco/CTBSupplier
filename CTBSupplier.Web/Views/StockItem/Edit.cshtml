@@ -1,0 +1,91 @@
+@model CTBSupplier.Web.Models.StockItem
+@{
+    ViewData["Title"] = "Edit Stock Item";
+}
+
+<h2>Edit Stock Item</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Edit" asp-route-supplierGuid="@Model.SupplierGUID" asp-route-stockCode="@Model.StockCode" method="post">
+            <input type="hidden" asp-for="SupplierGUID" />
+            <input type="hidden" asp-for="StockCode" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="SupplierGUID" class="form-label">Supplier</label>
+                <select asp-for="SupplierGUID" asp-items="ViewBag.Suppliers" class="form-select">
+                    <option value="">-- Select Supplier --</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockCode" class="form-label"></label>
+                <input asp-for="StockCode" class="form-control" readonly />
+                <small class="text-muted">Stock Code is part of the primary key and cannot be changed.</small>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockDesc" class="form-label"></label>
+                <input asp-for="StockDesc" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BrandName" class="form-label"></label>
+                <input asp-for="BrandName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="SupplierStockCode" class="form-label"></label>
+                <input asp-for="SupplierStockCode" class="form-control" />
+            </div>
+
+            <div class="row">
+                <div class="col mb-3">
+                    <label asp-for="SupplierCost" class="form-label"></label>
+                    <input asp-for="SupplierCost" class="form-control" />
+                </div>
+                <div class="col mb-3">
+                    <label asp-for="StockUnit" class="form-label"></label>
+                    <input asp-for="StockUnit" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UnitOfMeasurementName" class="form-label"></label>
+                <input asp-for="UnitOfMeasurementName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockCategoryName" class="form-label"></label>
+                <input asp-for="StockCategoryName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockMediaUrl" class="form-label"></label>
+                <input asp-for="StockMediaUrl" class="form-control" />
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="IsGstApplied" class="form-check-input" />
+                <label asp-for="IsGstApplied" class="form-check-label">GST Applied</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-controller="Supplier" asp-action="Details" asp-route-id="@Model.SupplierGUID" class="btn btn-secondary">Cancel</a>
+        </form>
+
+        <hr class="mt-4" />
+
+        <form asp-action="Delete" asp-route-supplierGuid="@Model.SupplierGUID" asp-route-stockCode="@Model.StockCode" method="post">
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('Permanently delete stock item \'@Model.StockCode\'? This cannot be undone.')">
+                Delete this Stock Item
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

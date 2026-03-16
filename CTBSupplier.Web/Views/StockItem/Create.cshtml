@@ -1,0 +1,82 @@
+@model CTBSupplier.Web.Models.StockItem
+@{
+    ViewData["Title"] = "New Stock Item";
+}
+
+<h2>New Stock Item</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="SupplierGUID" class="form-label">Supplier</label>
+                <select asp-for="SupplierGUID" asp-items="ViewBag.Suppliers" class="form-select">
+                    <option value="">-- Select Supplier --</option>
+                </select>
+                <span asp-validation-for="SupplierGUID" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockCode" class="form-label"></label>
+                <input asp-for="StockCode" class="form-control" />
+                <span asp-validation-for="StockCode" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockDesc" class="form-label"></label>
+                <input asp-for="StockDesc" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BrandName" class="form-label"></label>
+                <input asp-for="BrandName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="SupplierStockCode" class="form-label"></label>
+                <input asp-for="SupplierStockCode" class="form-control" />
+            </div>
+
+            <div class="row">
+                <div class="col mb-3">
+                    <label asp-for="SupplierCost" class="form-label"></label>
+                    <input asp-for="SupplierCost" class="form-control" />
+                    <span asp-validation-for="SupplierCost" class="text-danger"></span>
+                </div>
+                <div class="col mb-3">
+                    <label asp-for="StockUnit" class="form-label"></label>
+                    <input asp-for="StockUnit" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UnitOfMeasurementName" class="form-label"></label>
+                <input asp-for="UnitOfMeasurementName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockCategoryName" class="form-label"></label>
+                <input asp-for="StockCategoryName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StockMediaUrl" class="form-label"></label>
+                <input asp-for="StockMediaUrl" class="form-control" />
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="IsGstApplied" class="form-check-input" />
+                <label asp-for="IsGstApplied" class="form-check-label">GST Applied</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-controller="Supplier" asp-action="Details" asp-route-id="@Model.SupplierGUID" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

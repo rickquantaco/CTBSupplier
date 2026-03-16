@@ -1,0 +1,50 @@
+@model CTBSupplier.Web.Models.StockItem
+@{
+    ViewData["Title"] = "Stock Item Details";
+}
+
+<h2>Stock Item Details</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Stock Code</dt>
+            <dd class="col-sm-9">@Model.StockCode</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.StockDesc</dd>
+
+            <dt class="col-sm-3">Brand Name</dt>
+            <dd class="col-sm-9">@Model.BrandName</dd>
+
+            <dt class="col-sm-3">Supplier</dt>
+            <dd class="col-sm-9">@Model.Supplier?.SupplierName</dd>
+
+            <dt class="col-sm-3">Supplier Stock Code</dt>
+            <dd class="col-sm-9">@Model.SupplierStockCode</dd>
+
+            <dt class="col-sm-3">Supplier Cost</dt>
+            <dd class="col-sm-9">@Model.SupplierCost.ToString("C")</dd>
+
+            <dt class="col-sm-3">Stock Unit</dt>
+            <dd class="col-sm-9">@Model.StockUnit @Model.UnitOfMeasurementName</dd>
+
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.StockCategoryName</dd>
+
+            <dt class="col-sm-3">GST Applied</dt>
+            <dd class="col-sm-9">@(Model.IsGstApplied ? "Yes" : "No")</dd>
+
+            <dt class="col-sm-3">Media URL</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrWhiteSpace(Model.StockMediaUrl))
+                {
+                    <a href="@Model.StockMediaUrl" target="_blank" rel="noopener">@Model.StockMediaUrl</a>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<a asp-action="Edit" asp-route-supplierGuid="@Model.SupplierGUID" asp-route-stockCode="@Model.StockCode" class="btn btn-primary">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

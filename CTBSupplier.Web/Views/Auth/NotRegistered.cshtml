@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Denied – CTB Supplier</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center" style="min-height:100vh;">
+        <div class="card shadow" style="max-width:500px;width:100%;">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Access Denied</h4>
+            </div>
+            <div class="card-body">
+                <p class="fs-5">Your account is not registered to use this application.</p>
+                <p class="text-muted">
+                    The email address associated with your Microsoft account was not found in the
+                    authorised user list. Please contact your administrator to request access.
+                </p>
+            </div>
+            <div class="card-footer text-end">
+                <a href="/" class="btn btn-secondary">Return to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
