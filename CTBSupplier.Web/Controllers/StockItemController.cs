@@ -1,5 +1,6 @@
 using CTBSupplier.Web.Data;
 using CTBSupplier.Web.Models;
+using CTBSupplier.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,10 +12,12 @@ namespace CTBSupplier.Web.Controllers;
 public class StockItemController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly SupplierAccessService _access;
 
-    public StockItemController(ApplicationDbContext db)
+    public StockItemController(ApplicationDbContext db, SupplierAccessService access)
     {
         _db = db;
+        _access = access;
     }
 
     // GET: /StockItem
@@ -25,9 +28,14 @@ public class StockItemController : Controller
             pageSize = 25;
         if (page < 1) page = 1;
 
-        var query = _db.StockItems
-            .Include(i => i.Supplier)
-            .OrderBy(i => i.StockCode);
+        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
+
+        IQueryable<StockItem> query = _db.StockItems.Include(i => i.Supplier);
+
+        if (restriction != null)
+            query = query.Where(i => i.SupplierGUID == restriction.Value);
+
+        query = query.OrderBy(i => i.StockCode);
 
         var total = await query.CountAsync();
 
@@ -50,6 +58,9 @@ public class StockItemController : Controller
     // GET: /StockItem/Details?supplierGuid=...&stockCode=...
     public async Task<IActionResult> Details(Guid supplierGuid, string stockCode)
     {
+        if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
+            return View("Forbidden");
+
         var item = await _db.StockItems
             .Include(i => i.Supplier)
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
@@ -60,6 +71,16 @@ public class StockItemController : Controller
     // GET: /StockItem/Create?supplierGuid=...
     public async Task<IActionResult> Create(Guid? supplierGuid)
     {
+        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
+
+        // If restricted, enforce or auto-apply the supplier
+        if (restriction != null)
+        {
+            if (supplierGuid.HasValue && supplierGuid.Value != restriction.Value)
+                return View("Forbidden");
+            supplierGuid = restriction.Value;
+        }
+
         await PopulateSupplierDropdownAsync(supplierGuid);
         return View(new StockItem { SupplierGUID = supplierGuid ?? Guid.Empty });
     }
@@ -69,6 +90,9 @@ public class StockItemController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(StockItem item)
     {
+        if (!await _access.CanAccessSupplierAsync(User, item.SupplierGUID))
+            return View("Forbidden");
+
         if (!ModelState.IsValid)
         {
             await PopulateSupplierDropdownAsync(item.SupplierGUID);
@@ -82,6 +106,9 @@ public class StockItemController : Controller
     // GET: /StockItem/Edit?supplierGuid=...&stockCode=...
     public async Task<IActionResult> Edit(Guid supplierGuid, string stockCode)
     {
+        if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
+            return View("Forbidden");
+
         var item = await _db.StockItems
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
         if (item == null) return NotFound();
@@ -95,6 +122,8 @@ public class StockItemController : Controller
     public async Task<IActionResult> Edit(Guid supplierGuid, string stockCode, StockItem item)
     {
         if (supplierGuid != item.SupplierGUID || stockCode != item.StockCode) return BadRequest();
+        if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
+            return View("Forbidden");
         if (!ModelState.IsValid)
         {
             await PopulateSupplierDropdownAsync(item.SupplierGUID);
@@ -108,6 +137,9 @@ public class StockItemController : Controller
     // GET: /StockItem/Delete?supplierGuid=...&stockCode=...
     public async Task<IActionResult> Delete(Guid supplierGuid, string stockCode)
     {
+        if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
+            return View("Forbidden");
+
         var item = await _db.StockItems
             .Include(i => i.Supplier)
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
@@ -120,6 +152,9 @@ public class StockItemController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid supplierGuid, string stockCode)
     {
+        if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
+            return View("Forbidden");
+
         var item = await _db.StockItems
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
         if (item != null)

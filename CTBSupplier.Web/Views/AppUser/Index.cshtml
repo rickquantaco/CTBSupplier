@@ -1,15 +1,11 @@
 @model IEnumerable<CTBSupplier.Web.Models.AppUser>
 @{
     ViewData["Title"] = "Users";
-    bool canAddUpdate = ViewBag.CanAddUpdate == true;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Users</h2>
-    @if (canAddUpdate)
-    {
-        <a asp-action="Create" class="btn btn-primary">+ New User</a>
-    }
+    <a asp-action="Create" class="btn btn-primary">+ New User</a>
 </div>
 
 <table class="table table-striped table-hover">
@@ -40,10 +36,7 @@
                 </td>
                 <td>@u.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
                 <td class="text-end">
-                    @if (canAddUpdate)
-                    {
-                        <a asp-action="Edit" asp-route-id="@u.AppUserId" class="btn btn-sm btn-outline-primary">Edit</a>
-                    }
+                    <a asp-action="Edit" asp-route-id="@u.AppUserId" class="btn btn-sm btn-outline-primary">Edit</a>
                     <a asp-action="ManagePermissions" asp-route-id="@u.AppUserId" class="btn btn-sm btn-outline-secondary">Permissions</a>
                     <a asp-action="Delete" asp-route-id="@u.AppUserId" class="btn btn-sm btn-outline-danger">Delete</a>
                 </td>

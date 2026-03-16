@@ -25,6 +25,7 @@ public class Program
         // LoginHistory and permission services
         builder.Services.AddScoped<LoginHistoryService>();
         builder.Services.AddScoped<PermissionService>();
+        builder.Services.AddScoped<SupplierAccessService>();
 
         // Microsoft Entra (Azure AD) authentication with custom token validation
         builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -183,7 +184,7 @@ public class Program
         app.MapControllers();           // attribute-routed API controllers
         app.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
+            pattern: "{controller=Supplier}/{action=Index}/{id?}");
         app.MapRazorPages();
 
         app.Run();

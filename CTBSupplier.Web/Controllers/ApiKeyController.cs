@@ -12,15 +12,20 @@ namespace CTBSupplier.Web.Controllers;
 public class ApiKeyController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly PermissionService _permissions;
 
-    public ApiKeyController(ApplicationDbContext db)
+    public ApiKeyController(ApplicationDbContext db, PermissionService permissions)
     {
         _db = db;
+        _permissions = permissions;
     }
 
     // GET: /ApiKey
     public async Task<IActionResult> Index()
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var keys = await _db.ApiKeys
             .OrderByDescending(k => k.CreatedAt)
             .ToListAsync();
@@ -28,13 +33,22 @@ public class ApiKeyController : Controller
     }
 
     // GET: /ApiKey/Create
-    public IActionResult Create() => View();
+    public async Task<IActionResult> Create()
+    {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
+        return View();
+    }
 
     // POST: /ApiKey/Create — generates the key, shows it ONCE, stores only the hash
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(string keyName)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         if (string.IsNullOrWhiteSpace(keyName))
         {
             ModelState.AddModelError(nameof(keyName), "A name is required.");
@@ -68,6 +82,9 @@ public class ApiKeyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Revoke(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var key = await _db.ApiKeys.FindAsync(id);
         if (key != null)
         {
@@ -82,6 +99,9 @@ public class ApiKeyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Enable(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var key = await _db.ApiKeys.FindAsync(id);
         if (key != null)
         {
@@ -96,6 +116,9 @@ public class ApiKeyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var key = await _db.ApiKeys.FindAsync(id);
         if (key != null)
         {
@@ -103,5 +126,16 @@ public class ApiKeyController : Controller
             await _db.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    // -------------------------------------------------------------------------
+    private async Task<bool> CurrentUserIsAdminAsync()
+    {
+        var email = User.FindFirst("preferred_username")?.Value
+                 ?? User.FindFirst("email")?.Value
+                 ?? User.Identity?.Name
+                 ?? string.Empty;
+
+        return await _permissions.UserHasPermissionAsync(email, PermissionNames.AddUpdateAppUsers);
     }
 }

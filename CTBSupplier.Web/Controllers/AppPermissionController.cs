@@ -1,5 +1,6 @@
 using CTBSupplier.Web.Data;
 using CTBSupplier.Web.Models;
+using CTBSupplier.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,15 +11,20 @@ namespace CTBSupplier.Web.Controllers;
 public class AppPermissionController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly PermissionService _permissions;
 
-    public AppPermissionController(ApplicationDbContext db)
+    public AppPermissionController(ApplicationDbContext db, PermissionService permissions)
     {
         _db = db;
+        _permissions = permissions;
     }
 
     // GET: /AppPermission
     public async Task<IActionResult> Index()
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var permissions = await _db.AppPermissions
             .OrderBy(p => p.Description)
             .ToListAsync();
@@ -26,13 +32,22 @@ public class AppPermissionController : Controller
     }
 
     // GET: /AppPermission/Create
-    public IActionResult Create() => View(new AppPermission());
+    public async Task<IActionResult> Create()
+    {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
+        return View(new AppPermission());
+    }
 
     // POST: /AppPermission/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(AppPermission permission)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         if (!ModelState.IsValid) return View(permission);
 
         var exists = await _db.AppPermissions.AnyAsync(p => p.Description == permission.Description);
@@ -50,6 +65,9 @@ public class AppPermissionController : Controller
     // GET: /AppPermission/Edit/{id}
     public async Task<IActionResult> Edit(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var permission = await _db.AppPermissions.FindAsync(id);
         if (permission == null) return NotFound();
         return View(permission);
@@ -60,6 +78,9 @@ public class AppPermissionController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, AppPermission permission)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         if (id != permission.AppPermissionId) return BadRequest();
         if (!ModelState.IsValid) return View(permission);
 
@@ -71,6 +92,9 @@ public class AppPermissionController : Controller
     // GET: /AppPermission/Delete/{id}
     public async Task<IActionResult> Delete(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var permission = await _db.AppPermissions.FindAsync(id);
         if (permission == null) return NotFound();
         return View(permission);
@@ -81,6 +105,9 @@ public class AppPermissionController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
+        if (!await CurrentUserIsAdminAsync())
+            return View("Forbidden");
+
         var permission = await _db.AppPermissions.FindAsync(id);
         if (permission != null)
         {
@@ -88,5 +115,16 @@ public class AppPermissionController : Controller
             await _db.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    // -------------------------------------------------------------------------
+    private async Task<bool> CurrentUserIsAdminAsync()
+    {
+        var email = User.FindFirst("preferred_username")?.Value
+                 ?? User.FindFirst("email")?.Value
+                 ?? User.Identity?.Name
+                 ?? string.Empty;
+
+        return await _permissions.UserHasPermissionAsync(email, PermissionNames.AddUpdateAppUsers);
     }
 }

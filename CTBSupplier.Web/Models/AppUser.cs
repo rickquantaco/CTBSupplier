@@ -24,6 +24,9 @@ public class AppUser
     [Display(Name = "Active")]
     public bool IsActive { get; set; } = true;
 
+    [Display(Name = "Restricted to Supplier")]
+    public Guid? SupplierGUID { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<AppUserPermission> AppUserPermissions { get; set; } = new List<AppUserPermission>();

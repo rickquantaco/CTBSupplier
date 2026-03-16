@@ -3,6 +3,7 @@ using CTBSupplier.Web.Models;
 using CTBSupplier.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CTBSupplier.Web.Controllers;
@@ -22,12 +23,13 @@ public class AppUserController : Controller
     // GET: /AppUser
     public async Task<IActionResult> Index()
     {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
         var users = await _db.AppUsers
             .OrderBy(u => u.UserRealName)
             .ToListAsync();
 
-        // Pass whether the current user can add/update, so the view can show/hide buttons
-        ViewBag.CanAddUpdate = await CurrentUserHasAddUpdatePermission();
         return View(users);
     }
 
@@ -37,6 +39,7 @@ public class AppUserController : Controller
         if (!await CurrentUserHasAddUpdatePermission())
             return View("Forbidden");
 
+        await PopulateSupplierDropdownAsync();
         return View(new AppUser());
     }
 
@@ -48,12 +51,17 @@ public class AppUserController : Controller
         if (!await CurrentUserHasAddUpdatePermission())
             return View("Forbidden");
 
-        if (!ModelState.IsValid) return View(user);
+        if (!ModelState.IsValid)
+        {
+            await PopulateSupplierDropdownAsync(user.SupplierGUID);
+            return View(user);
+        }
 
         var exists = await _db.AppUsers.AnyAsync(u => u.UserEmail.ToLower() == user.UserEmail.ToLower());
         if (exists)
         {
             ModelState.AddModelError(nameof(user.UserEmail), "This email address is already registered.");
+            await PopulateSupplierDropdownAsync(user.SupplierGUID);
             return View(user);
         }
 
@@ -71,6 +79,7 @@ public class AppUserController : Controller
 
         var user = await _db.AppUsers.FindAsync(id);
         if (user == null) return NotFound();
+        await PopulateSupplierDropdownAsync(user.SupplierGUID);
         return View(user);
     }
 
@@ -83,7 +92,11 @@ public class AppUserController : Controller
             return View("Forbidden");
 
         if (id != user.AppUserId) return BadRequest();
-        if (!ModelState.IsValid) return View(user);
+        if (!ModelState.IsValid)
+        {
+            await PopulateSupplierDropdownAsync(user.SupplierGUID);
+            return View(user);
+        }
 
         _db.Update(user);
         await _db.SaveChangesAsync();
@@ -93,6 +106,9 @@ public class AppUserController : Controller
     // GET: /AppUser/Delete/{id}
     public async Task<IActionResult> Delete(int id)
     {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
         var user = await _db.AppUsers.FindAsync(id);
         if (user == null) return NotFound();
         return View(user);
@@ -103,6 +119,9 @@ public class AppUserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
         var user = await _db.AppUsers.FindAsync(id);
         if (user != null)
         {
@@ -115,6 +134,8 @@ public class AppUserController : Controller
     // GET: /AppUser/ManagePermissions/{id}
     public async Task<IActionResult> ManagePermissions(int id)
     {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
         var user = await _db.AppUsers
             .Include(u => u.AppUserPermissions)
             .FirstOrDefaultAsync(u => u.AppUserId == id);
@@ -145,6 +166,9 @@ public class AppUserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ManagePermissions(int id, ManagePermissionsViewModel vm)
     {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
         var user = await _db.AppUsers
             .Include(u => u.AppUserPermissions)
             .FirstOrDefaultAsync(u => u.AppUserId == id);
@@ -176,5 +200,14 @@ public class AppUserController : Controller
                  ?? string.Empty;
 
         return await _permissions.UserHasPermissionAsync(email, PermissionNames.AddUpdateAppUsers);
+    }
+
+    private async Task PopulateSupplierDropdownAsync(Guid? selectedId = null)
+    {
+        var suppliers = await _db.Suppliers
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.SupplierName)
+            .ToListAsync();
+        ViewBag.Suppliers = new SelectList(suppliers, "SupplierGUID", "SupplierName", selectedId);
     }
 }

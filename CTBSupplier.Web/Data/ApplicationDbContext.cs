@@ -71,6 +71,7 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("AppUser");
             entity.HasKey(e => e.AppUserId);
             entity.HasIndex(e => e.UserEmail).IsUnique();
+            entity.Property(e => e.SupplierGUID).HasColumnName("supplierGUID");
         });
 
         // LoginHistory
