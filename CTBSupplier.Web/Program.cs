@@ -166,6 +166,11 @@ public class Program
             app.UseHsts();
         }
 
+        app.UseRequestLocalization(new RequestLocalizationOptions()
+            .SetDefaultCulture("en-AU")
+            .AddSupportedCultures("en-AU")
+            .AddSupportedUICultures("en-AU"));
+
         app.UseHttpsRedirection();
         app.UseStaticFiles();
         app.UseRouting();

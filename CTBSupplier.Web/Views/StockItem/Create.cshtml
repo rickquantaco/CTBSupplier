@@ -63,7 +63,13 @@
 
             <div class="mb-3">
                 <label asp-for="StockMediaUrl" class="form-label"></label>
-                <input asp-for="StockMediaUrl" class="form-control" />
+                <input asp-for="StockMediaUrl" class="form-control" id="stockMediaUrlInput" />
+                <div id="stockMediaPreview" class="mt-2" style="display:none;">
+                    <img id="stockMediaImg"
+                         src=""
+                         alt="Product image preview"
+                         style="width:150px;height:150px;object-fit:contain;border:1px solid #dee2e6;border-radius:4px;" />
+                </div>
             </div>
 
             <div class="mb-3 form-check">
@@ -79,4 +85,25 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        (function () {
+            const input   = document.getElementById('stockMediaUrlInput');
+            const preview = document.getElementById('stockMediaPreview');
+            const img     = document.getElementById('stockMediaImg');
+
+            function updatePreview() {
+                const url = input.value.trim();
+                if (url) {
+                    img.src               = url;
+                    preview.style.display = '';
+                } else {
+                    preview.style.display = 'none';
+                    img.src               = '';
+                }
+            }
+
+            input.addEventListener('blur',  updatePreview);
+            input.addEventListener('paste', () => setTimeout(updatePreview, 0));
+        })();
+    </script>
 }

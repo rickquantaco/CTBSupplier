@@ -1,6 +1,13 @@
 @model CTBSupplier.Web.Models.StockItemIndexViewModel
 @{
     ViewData["Title"] = "Stock Items";
+    bool isGrid = Model.ViewMode == "grid";
+
+    // Pre-compute button classes to avoid double-quotes inside HTML attribute values
+    string listBtnClass = !isGrid ? "btn btn-sm btn-dark"            : "btn btn-sm btn-outline-secondary";
+    string gridBtnClass =  isGrid ? "btn btn-sm btn-dark"            : "btn btn-sm btn-outline-secondary";
+    string prevDisabled = Model.Page <= 1              ? "disabled"  : "";
+    string nextDisabled = Model.Page >= Model.TotalPages ? "disabled" : "";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -8,93 +15,183 @@
     <a asp-action="Create" class="btn btn-primary">+ New Stock Item</a>
 </div>
 
-@* Page size selector *@
-<div class="d-flex align-items-center gap-2 mb-3">
-    <span class="text-muted small">Per page:</span>
-    @foreach (var size in new[] { 25, 50, 100 })
-    {
-        if (Model.PageSize == size)
+@* Toolbar: per-page selector + view toggle *@
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">Per page:</span>
+        @foreach (var size in new[] { 25, 50, 100 })
         {
-            <span class="btn btn-sm btn-dark disabled">@size</span>
+            if (Model.PageSize == size)
+            {
+                <span class="btn btn-sm btn-dark disabled">@size</span>
+            }
+            else
+            {
+                <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@size"
+                   asp-route-viewMode="@Model.ViewMode" class="btn btn-sm btn-outline-secondary">@size</a>
+            }
         }
-        else
-        {
-            <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@size" class="btn btn-sm btn-outline-secondary">@size</a>
-        }
-    }
+    </div>
+
+    <div class="btn-group" role="group" aria-label="View mode">
+        <a asp-action="Index" asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize"
+           asp-route-viewMode="list"
+           class="@listBtnClass"
+           title="List view">&#9776; List</a>
+        <a asp-action="Index" asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize"
+           asp-route-viewMode="grid"
+           class="@gridBtnClass"
+           title="Grid view">&#9638; Grid</a>
+    </div>
+
 </div>
 
-<table class="table table-striped table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Stock Code</th>
-            <th>Description</th>
-            <th>Brand</th>
-            <th>Supplier</th>
-            <th>Cost</th>
-            <th>Category</th>
-            <th>GST</th>
-            <th class="text-center" style="width:50px;">&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
+@* ===================== LIST VIEW ===================== *@
+@if (!isGrid)
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Stock Code</th>
+                <th>Description</th>
+                <th>Brand</th>
+                <th>Supplier</th>
+                <th>Cost</th>
+                <th>Category</th>
+                <th>GST</th>
+                <th class="text-center" style="width:50px;">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Edit"
+                           asp-route-supplierGuid="@item.SupplierGUID"
+                           asp-route-stockCode="@item.StockCode">@item.StockCode</a>
+                    </td>
+                    <td>@item.StockDesc</td>
+                    <td>@item.BrandName</td>
+                    <td>@item.Supplier?.SupplierName</td>
+                    <td>@item.SupplierCost.ToString("C")</td>
+                    <td>@item.StockCategoryName</td>
+                    <td>@(item.IsGstApplied ? "Yes" : "No")</td>
+                    <td class="text-center">
+                        <a asp-action="Delete"
+                           asp-route-supplierGuid="@item.SupplierGUID"
+                           asp-route-stockCode="@item.StockCode"
+                           class="btn btn-sm btn-danger"
+                           title="Delete this Stock Item"
+                           data-bs-toggle="tooltip">&times;</a>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="8" class="text-center text-muted">No stock items found.</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* ===================== GRID VIEW ===================== *@
+@if (isGrid)
+{
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
         @foreach (var item in Model.Items)
         {
-            <tr>
-                <td>
-                    <a asp-action="Edit"
-                       asp-route-supplierGuid="@item.SupplierGUID"
-                       asp-route-stockCode="@item.StockCode">@item.StockCode</a>
-                </td>
-                <td>@item.StockDesc</td>
-                <td>@item.BrandName</td>
-                <td>@item.Supplier?.SupplierName</td>
-                <td>@item.SupplierCost.ToString("C")</td>
-                <td>@item.StockCategoryName</td>
-                <td>@(item.IsGstApplied ? "Yes" : "No")</td>
-                <td class="text-center">
-                    <a asp-action="Delete"
-                       asp-route-supplierGuid="@item.SupplierGUID"
-                       asp-route-stockCode="@item.StockCode"
-                       class="btn btn-sm btn-danger"
-                       title="Delete this Stock Item"
-                       data-bs-toggle="tooltip">&times;</a>
-                </td>
-            </tr>
+            <div class="col">
+                <div class="card h-100 text-center shadow-sm">
+
+                    @* Stock code as header link to edit *@
+                    <div class="card-header py-1 px-2 bg-dark">
+                        <a asp-action="Edit"
+                           asp-route-supplierGuid="@item.SupplierGUID"
+                           asp-route-stockCode="@item.StockCode"
+                           class="fw-semibold small text-white text-decoration-none">@item.StockCode</a>
+                    </div>
+
+                    <div class="card-body p-2 d-flex flex-column align-items-center">
+
+                        @* Product image or placeholder *@
+                        @if (!string.IsNullOrWhiteSpace(item.StockMediaUrl))
+                        {
+                            <img src="@item.StockMediaUrl"
+                                 alt="@item.StockCode"
+                                 loading="lazy"
+                                 style="width:150px;height:150px;object-fit:contain;" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light text-muted"
+                                 style="width:150px;height:150px;border:1px dashed #ccc;border-radius:4px;">
+                                <small>No Image</small>
+                            </div>
+                        }
+
+                        @* Description — clamp to 2 lines *@
+                        <p class="mt-2 mb-1 small stock-desc-clamp">@item.StockDesc</p>
+
+                        @* Price *@
+                        <p class="mb-0 fw-semibold small">@item.SupplierCost.ToString("C")</p>
+
+                        @* Brand (optional) *@
+                        @if (!string.IsNullOrWhiteSpace(item.BrandName))
+                        {
+                            <p class="mb-0 text-muted small">@item.BrandName</p>
+                        }
+
+                    </div>
+                </div>
+            </div>
         }
         @if (!Model.Items.Any())
         {
-            <tr><td colspan="8" class="text-center text-muted">No stock items found.</td></tr>
+            <div class="col-12 text-center text-muted py-4">No stock items found.</div>
         }
-    </tbody>
-</table>
+    </div>
+}
 
-@* Pagination controls *@
+@* ===================== PAGINATION ===================== *@
 @if (Model.TotalPages > 1)
 {
-    <nav aria-label="Stock item pages">
+    <nav aria-label="Stock item pages" class="mt-4">
         <ul class="pagination">
-            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize">&#8249;</a>
+            <li class="page-item @prevDisabled">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)"
+                   asp-route-pageSize="@Model.PageSize" asp-route-viewMode="@Model.ViewMode">&#8249;</a>
             </li>
 
             @for (int p = 1; p <= Model.TotalPages; p++)
             {
-                <li class="page-item @(p == Model.Page ? "active" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-pageSize="@Model.PageSize">@p</a>
+                <li class="page-item @(p == Model.Page ? "active" : string.Empty)">
+                    <a class="page-link" asp-action="Index" asp-route-page="@p"
+                       asp-route-pageSize="@Model.PageSize" asp-route-viewMode="@Model.ViewMode">@p</a>
                 </li>
             }
 
-            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize">&#8250;</a>
+            <li class="page-item @nextDisabled">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)"
+                   asp-route-pageSize="@Model.PageSize" asp-route-viewMode="@Model.ViewMode">&#8250;</a>
             </li>
         </ul>
     </nav>
 }
 
 @section Scripts {
+    <style>
+        .stock-desc-clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3em;
+            max-height: 2.6em;
+        }
+    </style>
     <script>
-        // Initialise Bootstrap tooltips
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
             new bootstrap.Tooltip(el);
         });

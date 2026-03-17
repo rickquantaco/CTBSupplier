@@ -21,12 +21,19 @@ public class StockItemController : Controller
     }
 
     // GET: /StockItem
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 25)
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 25, string? viewMode = null)
     {
         // Clamp pageSize to allowed values
         if (pageSize != 25 && pageSize != 50 && pageSize != 100)
             pageSize = 25;
         if (page < 1) page = 1;
+
+        // Resolve viewMode: explicit param → cookie → default "list"
+        if (string.IsNullOrEmpty(viewMode))
+            viewMode = Request.Cookies["StockItemViewMode"] ?? "list";
+        if (viewMode != "grid") viewMode = "list";
+        Response.Cookies.Append("StockItemViewMode", viewMode,
+            new Microsoft.AspNetCore.Http.CookieOptions { MaxAge = TimeSpan.FromDays(365), IsEssential = true });
 
         var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
 
@@ -46,10 +53,11 @@ public class StockItemController : Controller
 
         var vm = new StockItemIndexViewModel
         {
-            Items     = items,
-            Page      = page,
-            PageSize  = pageSize,
-            TotalCount = total
+            Items      = items,
+            Page       = page,
+            PageSize   = pageSize,
+            TotalCount = total,
+            ViewMode   = viewMode
         };
 
         return View(vm);

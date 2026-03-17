@@ -35,13 +35,21 @@ public class SupplierController : Controller
     // GET: /Supplier/Details/{id}
     public async Task<IActionResult> Details(
         Guid id, int page = 1, int pageSize = 25,
-        string? filterBrand = null, string? filterCategory = null)
+        string? filterBrand = null, string? filterCategory = null,
+        string? viewMode = null)
     {
         if (!await _access.CanAccessSupplierAsync(User, id))
             return View("Forbidden");
 
         if (pageSize != 25 && pageSize != 50 && pageSize != 100) pageSize = 25;
         if (page < 1) page = 1;
+
+        // Resolve viewMode: explicit param → cookie → default "list"
+        if (string.IsNullOrEmpty(viewMode))
+            viewMode = Request.Cookies["SupplierStockViewMode"] ?? "list";
+        if (viewMode != "grid") viewMode = "list";
+        Response.Cookies.Append("SupplierStockViewMode", viewMode,
+            new Microsoft.AspNetCore.Http.CookieOptions { MaxAge = TimeSpan.FromDays(365), IsEssential = true });
 
         var supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierGUID == id);
         if (supplier == null) return NotFound();
@@ -101,7 +109,8 @@ public class SupplierController : Controller
             FilterBrand         = filterBrand,
             FilterCategory      = filterCategory,
             AvailableBrands     = availableBrands,
-            AvailableCategories = availableCategories
+            AvailableCategories = availableCategories,
+            ViewMode            = viewMode
         };
 
         return View(vm);

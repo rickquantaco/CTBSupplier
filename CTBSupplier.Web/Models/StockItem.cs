@@ -49,7 +49,7 @@ public class StockItem
     [Display(Name = "GST Applied")]
     public bool IsGstApplied { get; set; }
 
-    [MaxLength(255)]
+    [MaxLength(1000)]
     [Display(Name = "Media URL")]
     public string? StockMediaUrl { get; set; }
 

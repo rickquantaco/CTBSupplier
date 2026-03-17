@@ -39,6 +39,11 @@
             <dd class="col-sm-9">
                 @if (!string.IsNullOrWhiteSpace(Model.StockMediaUrl))
                 {
+                    <div class="mb-2">
+                        <img src="@Model.StockMediaUrl"
+                             alt="Product image for @Model.StockCode"
+                             style="width:150px;height:150px;object-fit:contain;border:1px solid #dee2e6;border-radius:4px;" />
+                    </div>
                     <a href="@Model.StockMediaUrl" target="_blank" rel="noopener">@Model.StockMediaUrl</a>
                 }
             </dd>

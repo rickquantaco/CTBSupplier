@@ -16,4 +16,6 @@ public class SupplierDetailsViewModel
     // Distinct values for this supplier — used to populate the filter dropdowns
     public IEnumerable<string> AvailableBrands     { get; set; } = Enumerable.Empty<string>();
     public IEnumerable<string> AvailableCategories { get; set; } = Enumerable.Empty<string>();
+
+    public string ViewMode { get; set; } = "list";   // "list" | "grid"
 }
