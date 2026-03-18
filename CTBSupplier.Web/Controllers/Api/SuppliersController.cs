@@ -71,6 +71,44 @@ public class SuppliersController : ControllerBase
     }
 
     /// <summary>
+    /// Returns a single active supplier by their GUID, including stock item count.
+    /// </summary>
+    /// <remarks>
+    /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
+    /// Returns 404 if the supplier does not exist or is inactive.
+    ///
+    /// Example:
+    ///
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6
+    /// </remarks>
+    /// <param name="supplierGuid">The GUID of the supplier.</param>
+    [HttpGet("{supplierGuid:guid}")]
+    [Produces("application/json")]
+    public async Task<ActionResult<SupplierDto>> GetSupplier(Guid supplierGuid)
+    {
+        var supplier = await _db.Suppliers
+            .Where(s => s.SupplierGUID == supplierGuid && s.IsActive)
+            .Select(s => new SupplierDto
+            {
+                SupplierGUID        = s.SupplierGUID,
+                SupplierName        = s.SupplierName,
+                SupplierAbn         = s.SupplierAbn,
+                IsActive            = s.IsActive,
+                Website             = s.Website,
+                SupplierImage       = s.SupplierImage,
+                SupplierDescription = s.SupplierDescription,
+                SupplierCategory    = s.SupplierCategory,
+                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID)
+            })
+            .FirstOrDefaultAsync();
+
+        if (supplier is null)
+            return NotFound();
+
+        return Ok(supplier);
+    }
+
+    /// <summary>
     /// Returns stock items for a specific supplier, with optional filters.
     /// </summary>
     /// <remarks>
