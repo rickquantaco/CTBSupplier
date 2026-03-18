@@ -22,4 +22,12 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
   </ItemGroup>
 
+
+  <!-- After publishing as a container, update the Azure Container App to pull the new image -->
+  <Target Name="UpdateAzureContainerApp" AfterTargets="Publish" Condition="'$(PublishProtocol)' == 'ContainerRegistry'">
+    <Message Text="Updating Azure Container App ctb-supplier..." Importance="high" />
+    <Exec Command="az containerapp update --name ctb-supplier --resource-group ctb-dev-rg --image ctbdevacr.azurecr.io/ctb-supplier:latest" />
+    <Message Text="Container App updated successfully." Importance="high" />
+  </Target>
+
 </Project>
