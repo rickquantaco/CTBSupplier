@@ -3,6 +3,7 @@ using CTBSupplier.Web.Data;
 using CTBSupplier.Web.Models.Api;
 using CTBSupplier.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -109,6 +110,64 @@ public class SuppliersController : ControllerBase
     }
 
     /// <summary>
+    /// Searches for active suppliers by ABN and/or SupplierGUID.
+    /// </summary>
+    /// <remarks>
+    /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
+    /// At least one of <paramref name="abn"/> or <paramref name="supplierGuid"/> must be provided.
+    /// When both are supplied, both conditions must match (AND logic).
+    /// Spaces in the ABN are ignored.
+    /// Only active suppliers (IsActive = true) are returned.
+    ///
+    /// Example:
+    ///
+    ///     GET /api/v1/suppliers/search?abn=51824753556
+    ///     GET /api/v1/suppliers/search?abn=51 824 753 556
+    ///     GET /api/v1/suppliers/search?supplierGuid=3fa85f64-5717-4562-b3fc-2c963f66afa6
+    ///     GET /api/v1/suppliers/search?abn=51824753556&amp;supplierGuid=3fa85f64-5717-4562-b3fc-2c963f66afa6
+    /// </remarks>
+    /// <param name="abn">ABN to search for (spaces are ignored).</param>
+    /// <param name="supplierGuid">Supplier GUID to search for.</param>
+    [HttpGet("search")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(IEnumerable<SupplierDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<SupplierDto>>> SearchSuppliers(
+        [FromQuery] string? abn,
+        [FromQuery] Guid? supplierGuid)
+    {
+        if (string.IsNullOrWhiteSpace(abn) && supplierGuid is null)
+            return BadRequest("At least one of 'abn' or 'supplierGuid' must be provided.");
+
+        var normalizedAbn = abn?.Replace(" ", "");
+
+        IQueryable<Models.Supplier> query = _db.Suppliers.Where(s => s.IsActive);
+
+        if (!string.IsNullOrEmpty(normalizedAbn))
+            query = query.Where(s => s.SupplierAbnForLookups == normalizedAbn);
+
+        if (supplierGuid is not null)
+            query = query.Where(s => s.SupplierGUID == supplierGuid.Value);
+
+        var suppliers = await query
+            .Select(s => new SupplierDto
+            {
+                SupplierGUID        = s.SupplierGUID,
+                SupplierName        = s.SupplierName,
+                SupplierAbn         = s.SupplierAbn,
+                IsActive            = s.IsActive,
+                Website             = s.Website,
+                SupplierImage       = s.SupplierImage,
+                SupplierDescription = s.SupplierDescription,
+                SupplierCategory    = s.SupplierCategory,
+                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID)
+            })
+            .ToListAsync();
+
+        return Ok(suppliers);
+    }
+
+    /// <summary>
     /// Returns stock items for a specific supplier, with optional filters.
     /// </summary>
     /// <remarks>
@@ -162,5 +221,41 @@ public class SuppliersController : ControllerBase
             .ToListAsync();
 
         return Ok(items);
+    }
+
+    /// <summary>
+    /// Returns the image URL for a specific stock item.
+    /// </summary>
+    /// <remarks>
+    /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
+    /// Returns 404 if the stock item does not exist or has no image URL.
+    ///
+    /// Example:
+    ///
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems/ABC123/imageurl
+    /// </remarks>
+    /// <param name="supplierGuid">The GUID of the supplier.</param>
+    /// <param name="stockCode">The stock code of the item.</param>
+    [HttpGet("{supplierGuid:guid}/stockitems/{stockCode}/imageurl")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(StockItemImageUrlDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<StockItemImageUrlDto>> GetStockItemImageUrl(
+        Guid supplierGuid, string stockCode)
+    {
+        var item = await _db.StockItems
+            .Where(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode)
+            .Select(i => new { i.SupplierGUID, i.StockCode, i.StockMediaUrl })
+            .FirstOrDefaultAsync();
+
+        if (item is null || string.IsNullOrEmpty(item.StockMediaUrl))
+            return NotFound();
+
+        return Ok(new StockItemImageUrlDto
+        {
+            SupplierGUID = item.SupplierGUID,
+            StockCode    = item.StockCode,
+            StockMediaUrl = item.StockMediaUrl
+        });
     }
 }
