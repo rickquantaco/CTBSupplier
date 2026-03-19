@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AppPermission> AppPermissions { get; set; }
     public DbSet<AppUserPermission> AppUserPermissions { get; set; }
     public DbSet<ApiKey> ApiKeys { get; set; }
+    public DbSet<AppUserSupplier> AppUserSuppliers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,7 +72,23 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("AppUser");
             entity.HasKey(e => e.AppUserId);
             entity.HasIndex(e => e.UserEmail).IsUnique();
-            entity.Property(e => e.SupplierGUID).HasColumnName("supplierGUID");
+        });
+
+        // AppUserSupplier (intersection table — many-to-many between AppUser and Supplier)
+        modelBuilder.Entity<AppUserSupplier>(entity =>
+        {
+            entity.ToTable("AppUserSupplier");
+            entity.HasKey(e => new { e.AppUserId, e.SupplierGUID });
+
+            entity.HasOne(e => e.AppUser)
+                  .WithMany(u => u.AppUserSuppliers)
+                  .HasForeignKey(e => e.AppUserId)
+                  .HasConstraintName("FK_AppUserSupplier_AppUser");
+
+            entity.HasOne(e => e.Supplier)
+                  .WithMany()
+                  .HasForeignKey(e => e.SupplierGUID)
+                  .HasConstraintName("FK_AppUserSupplier_Supplier");
         });
 
         // LoginHistory

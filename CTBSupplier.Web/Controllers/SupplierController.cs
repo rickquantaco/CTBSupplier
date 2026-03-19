@@ -22,12 +22,14 @@ public class SupplierController : Controller
     // GET: /Supplier
     public async Task<IActionResult> Index()
     {
-        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
+        var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
 
         IQueryable<Supplier> query = _db.Suppliers.OrderBy(s => s.SupplierName);
 
-        if (restriction != null)
-            query = query.Where(s => s.SupplierGUID == restriction.Value);
+        if (allowed != null)
+            query = query.Where(s => allowed.Contains(s.SupplierGUID));
+
+        ViewBag.IsRestricted = allowed != null;
 
         return View(await query.ToListAsync());
     }
@@ -119,8 +121,8 @@ public class SupplierController : Controller
     // GET: /Supplier/Create
     public async Task<IActionResult> Create()
     {
-        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
-        if (restriction != null)
+        var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
+        if (allowed != null)
             return View("Forbidden");
 
         return View(new Supplier());

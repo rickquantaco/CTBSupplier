@@ -35,12 +35,12 @@ public class StockItemController : Controller
         Response.Cookies.Append("StockItemViewMode", viewMode,
             new Microsoft.AspNetCore.Http.CookieOptions { MaxAge = TimeSpan.FromDays(365), IsEssential = true });
 
-        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
+        var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
 
         IQueryable<StockItem> query = _db.StockItems.Include(i => i.Supplier);
 
-        if (restriction != null)
-            query = query.Where(i => i.SupplierGUID == restriction.Value);
+        if (allowed != null)
+            query = query.Where(i => allowed.Contains(i.SupplierGUID));
 
         query = query.OrderBy(i => i.StockCode);
 
@@ -79,15 +79,11 @@ public class StockItemController : Controller
     // GET: /StockItem/Create?supplierGuid=...
     public async Task<IActionResult> Create(Guid? supplierGuid)
     {
-        var restriction = await _access.GetRestrictedSupplierGuidAsync(User);
+        var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
 
-        // If restricted, enforce or auto-apply the supplier
-        if (restriction != null)
-        {
-            if (supplierGuid.HasValue && supplierGuid.Value != restriction.Value)
-                return View("Forbidden");
-            supplierGuid = restriction.Value;
-        }
+        // If restricted, enforce the supplier is within the allowed set
+        if (allowed != null && supplierGuid.HasValue && !allowed.Contains(supplierGuid.Value))
+            return View("Forbidden");
 
         await PopulateSupplierDropdownAsync(supplierGuid);
         return View(new StockItem { SupplierGUID = supplierGuid ?? Guid.Empty });

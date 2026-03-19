@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace CTBSupplier.Web.Services;
 
 /// <summary>
-/// Resolves whether the current user is restricted to a single supplier.
-/// Returns null = unrestricted (sees all). Returns a Guid = restricted to that supplier only.
+/// Resolves which suppliers the current user may access.
+/// Returns null = unrestricted (sees all). Returns a HashSet = restricted to those suppliers only.
 /// </summary>
 public class SupplierAccessService
 {
@@ -17,8 +17,11 @@ public class SupplierAccessService
         _db = db;
     }
 
-    /// <summary>Returns the supplier GUID the user is locked to, or null if unrestricted.</summary>
-    public async Task<Guid?> GetRestrictedSupplierGuidAsync(ClaimsPrincipal user)
+    /// <summary>
+    /// Returns the set of supplier GUIDs the user is locked to, or null if unrestricted.
+    /// An empty set means the user has restrictions configured but none assigned (sees nothing).
+    /// </summary>
+    public async Task<HashSet<Guid>?> GetAllowedSupplierGuidsAsync(ClaimsPrincipal user)
     {
         var email = user.FindFirst("preferred_username")?.Value
                  ?? user.FindFirst("email")?.Value
@@ -30,15 +33,23 @@ public class SupplierAccessService
 
         var appUser = await _db.AppUsers
             .AsNoTracking()
+            .Include(u => u.AppUserSuppliers)
             .FirstOrDefaultAsync(u => u.UserEmail == email);
 
-        return appUser?.SupplierGUID;
+        if (appUser == null)
+            return null;
+
+        // If the user has no supplier restrictions recorded, they are unrestricted
+        if (appUser.AppUserSuppliers.Count == 0)
+            return null;
+
+        return appUser.AppUserSuppliers.Select(s => s.SupplierGUID).ToHashSet();
     }
 
     /// <summary>Returns true if the user may access the given supplier.</summary>
     public async Task<bool> CanAccessSupplierAsync(ClaimsPrincipal user, Guid supplierGuid)
     {
-        var restriction = await GetRestrictedSupplierGuidAsync(user);
-        return restriction == null || restriction.Value == supplierGuid;
+        var allowed = await GetAllowedSupplierGuidsAsync(user);
+        return allowed == null || allowed.Contains(supplierGuid);
     }
 }

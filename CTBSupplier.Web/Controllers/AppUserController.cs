@@ -3,7 +3,6 @@ using CTBSupplier.Web.Models;
 using CTBSupplier.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CTBSupplier.Web.Controllers;
@@ -39,7 +38,6 @@ public class AppUserController : Controller
         if (!await CurrentUserHasAddUpdatePermission())
             return View("Forbidden");
 
-        await PopulateSupplierDropdownAsync();
         return View(new AppUser());
     }
 
@@ -52,16 +50,12 @@ public class AppUserController : Controller
             return View("Forbidden");
 
         if (!ModelState.IsValid)
-        {
-            await PopulateSupplierDropdownAsync(user.SupplierGUID);
             return View(user);
-        }
 
         var exists = await _db.AppUsers.AnyAsync(u => u.UserEmail.ToLower() == user.UserEmail.ToLower());
         if (exists)
         {
             ModelState.AddModelError(nameof(user.UserEmail), "This email address is already registered.");
-            await PopulateSupplierDropdownAsync(user.SupplierGUID);
             return View(user);
         }
 
@@ -79,7 +73,6 @@ public class AppUserController : Controller
 
         var user = await _db.AppUsers.FindAsync(id);
         if (user == null) return NotFound();
-        await PopulateSupplierDropdownAsync(user.SupplierGUID);
         return View(user);
     }
 
@@ -93,10 +86,7 @@ public class AppUserController : Controller
 
         if (id != user.AppUserId) return BadRequest();
         if (!ModelState.IsValid)
-        {
-            await PopulateSupplierDropdownAsync(user.SupplierGUID);
             return View(user);
-        }
 
         _db.Update(user);
         await _db.SaveChangesAsync();
@@ -175,7 +165,6 @@ public class AppUserController : Controller
 
         if (user == null) return NotFound();
 
-        // Remove all existing permissions for this user, then re-add checked ones
         _db.AppUserPermissions.RemoveRange(user.AppUserPermissions);
 
         foreach (var item in vm.Permissions.Where(p => p.IsGranted))
@@ -184,6 +173,66 @@ public class AppUserController : Controller
             {
                 AppUserId       = id,
                 AppPermissionId = item.AppPermissionId
+            });
+        }
+
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET: /AppUser/ManageSupplierRestrictions/{id}
+    public async Task<IActionResult> ManageSupplierRestrictions(int id)
+    {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
+        var user = await _db.AppUsers
+            .Include(u => u.AppUserSuppliers)
+            .FirstOrDefaultAsync(u => u.AppUserId == id);
+
+        if (user == null) return NotFound();
+
+        var allSuppliers = await _db.Suppliers.OrderBy(s => s.SupplierName).ToListAsync();
+        var restrictedGuids = user.AppUserSuppliers.Select(s => s.SupplierGUID).ToHashSet();
+
+        var vm = new ManageSupplierRestrictionsViewModel
+        {
+            AppUserId    = user.AppUserId,
+            UserRealName = user.UserRealName,
+            UserEmail    = user.UserEmail,
+            Suppliers    = allSuppliers.Select(s => new SupplierCheckItem
+            {
+                SupplierGUID = s.SupplierGUID,
+                SupplierName = s.SupplierName,
+                IsRestricted = restrictedGuids.Contains(s.SupplierGUID)
+            }).ToList()
+        };
+
+        return View(vm);
+    }
+
+    // POST: /AppUser/ManageSupplierRestrictions/{id}
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ManageSupplierRestrictions(int id, ManageSupplierRestrictionsViewModel vm)
+    {
+        if (!await CurrentUserHasAddUpdatePermission())
+            return View("Forbidden");
+
+        var user = await _db.AppUsers
+            .Include(u => u.AppUserSuppliers)
+            .FirstOrDefaultAsync(u => u.AppUserId == id);
+
+        if (user == null) return NotFound();
+
+        _db.AppUserSuppliers.RemoveRange(user.AppUserSuppliers);
+
+        foreach (var item in vm.Suppliers.Where(s => s.IsRestricted))
+        {
+            _db.AppUserSuppliers.Add(new AppUserSupplier
+            {
+                AppUserId    = id,
+                SupplierGUID = item.SupplierGUID
             });
         }
 
@@ -200,14 +249,5 @@ public class AppUserController : Controller
                  ?? string.Empty;
 
         return await _permissions.UserHasPermissionAsync(email, PermissionNames.AddUpdateAppUsers);
-    }
-
-    private async Task PopulateSupplierDropdownAsync(Guid? selectedId = null)
-    {
-        var suppliers = await _db.Suppliers
-            .Where(s => s.IsActive)
-            .OrderBy(s => s.SupplierName)
-            .ToListAsync();
-        ViewBag.Suppliers = new SelectList(suppliers, "SupplierGUID", "SupplierName", selectedId);
     }
 }
