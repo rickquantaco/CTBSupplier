@@ -11,6 +11,7 @@ public class StockItemDto
     public double  StockUnit             { get; init; }
     public string  UnitOfMeasurementName { get; init; } = string.Empty;
     public string  StockCategoryName     { get; init; } = string.Empty;
-    public bool    IsGstApplied          { get; init; }
-    public string? StockMediaUrl         { get; init; }
+    public bool     IsGstApplied          { get; init; }
+    public string?  StockMediaUrl         { get; init; }
+    public DateTime DateAddedUtc          { get; init; }
 }

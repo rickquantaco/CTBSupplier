@@ -59,6 +59,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.StockCategoryName).HasColumnName("stockCategoryName");
             entity.Property(e => e.IsGstApplied).HasColumnName("isGstApplied");
             entity.Property(e => e.StockMediaUrl).HasColumnName("stockMediaUrl");
+            entity.Property(e => e.DateAddedUtc)
+                  .HasColumnName("dateAddedUTC")
+                  .HasDefaultValueSql("GETUTCDATE()")
+                  .ValueGeneratedOnAdd();
 
             entity.HasOne(e => e.Supplier)
                   .WithMany(s => s.StockItems)

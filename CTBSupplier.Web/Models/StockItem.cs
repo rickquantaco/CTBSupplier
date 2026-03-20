@@ -53,5 +53,8 @@ public class StockItem
     [Display(Name = "Media URL")]
     public string? StockMediaUrl { get; set; }
 
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public DateTime DateAddedUtc { get; set; }
+
     public Supplier? Supplier { get; set; }
 }

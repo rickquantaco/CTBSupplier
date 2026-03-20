@@ -216,7 +216,57 @@ public class SuppliersController : ControllerBase
                 UnitOfMeasurementName = i.UnitOfMeasurementName,
                 StockCategoryName     = i.StockCategoryName,
                 IsGstApplied          = i.IsGstApplied,
-                StockMediaUrl         = i.StockMediaUrl
+                StockMediaUrl         = i.StockMediaUrl,
+                DateAddedUtc          = i.DateAddedUtc
+            })
+            .ToListAsync();
+
+        return Ok(items);
+    }
+
+    /// <summary>
+    /// Returns stock items for a specific supplier added after a given UTC date.
+    /// </summary>
+    /// <remarks>
+    /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
+    /// Returns items where <c>dateAddedUTC</c> is strictly greater than <paramref name="minDateAddedUtc"/>.
+    /// Returns 404 if the supplier does not exist.
+    ///
+    /// Example:
+    ///
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems/since?minDateAddedUtc=2026-04-01T00:00:00Z
+    /// </remarks>
+    /// <param name="supplierGuid">The GUID of the supplier.</param>
+    /// <param name="minDateAddedUtc">Only return items added strictly after this UTC date/time.</param>
+    [HttpGet("{supplierGuid:guid}/stockitems/since")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(IEnumerable<StockItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<StockItemDto>>> GetStockItemsSince(
+        Guid supplierGuid,
+        [FromQuery] DateTime minDateAddedUtc)
+    {
+        if (!await _db.Suppliers.AnyAsync(s => s.SupplierGUID == supplierGuid))
+            return NotFound();
+
+        var items = await _db.StockItems
+            .Where(i => i.SupplierGUID == supplierGuid && i.DateAddedUtc > minDateAddedUtc)
+            .OrderBy(i => i.DateAddedUtc)
+            .ThenBy(i => i.StockCode)
+            .Select(i => new StockItemDto
+            {
+                SupplierGUID          = i.SupplierGUID,
+                StockCode             = i.StockCode,
+                StockDesc             = i.StockDesc,
+                BrandName             = i.BrandName,
+                SupplierStockCode     = i.SupplierStockCode,
+                SupplierCost          = i.SupplierCost,
+                StockUnit             = i.StockUnit,
+                UnitOfMeasurementName = i.UnitOfMeasurementName,
+                StockCategoryName     = i.StockCategoryName,
+                IsGstApplied          = i.IsGstApplied,
+                StockMediaUrl         = i.StockMediaUrl,
+                DateAddedUtc          = i.DateAddedUtc
             })
             .ToListAsync();
 
