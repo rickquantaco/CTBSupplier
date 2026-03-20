@@ -9,7 +9,7 @@
     <thead class="table-dark">
         <tr>
             <th>Login Name</th>
-            <th>Attempted At (UTC)</th>
+            <th>Attempted At</th>
             <th>Result</th>
             <th>IP Address</th>
         </tr>
@@ -19,7 +19,7 @@
         {
             <tr>
                 <td>@h.LoginName</td>
-                <td>@h.AttemptedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td data-utc="@h.AttemptedAt.ToString("yyyy-MM-dd HH:mm:ss") UTC">@h.AttemptedAt.ToString("yyyy-MM-dd HH:mm:ss") UTC</td>
                 <td>
                     @if (h.IsSuccess)
                     {
@@ -39,3 +39,19 @@
         }
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-utc]').forEach(el => {
+            const utcLabel = el.getAttribute('data-utc');
+            // Ensure the string is parsed as UTC by appending Z if not already present
+            const iso = utcLabel.replace(' UTC', '').replace(' ', 'T') + 'Z';
+            const local = new Date(iso).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+            el.title = utcLabel;
+            el.textContent = local;
+        });
+    </script>
+}
