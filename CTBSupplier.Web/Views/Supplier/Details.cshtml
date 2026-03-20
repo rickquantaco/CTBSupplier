@@ -187,6 +187,9 @@
                            class="fw-semibold small text-white text-decoration-none">@item.StockCode</a>
                     </div>
                     <div class="card-body p-2 d-flex flex-column align-items-center">
+                        <a asp-controller="StockItem" asp-action="Edit"
+                           asp-route-supplierGuid="@item.SupplierGUID"
+                           asp-route-stockCode="@item.StockCode">
                         @if (!string.IsNullOrWhiteSpace(item.StockMediaUrl))
                         {
                             <img src="@item.StockMediaUrl"
@@ -201,6 +204,7 @@
                                 <small>No Image</small>
                             </div>
                         }
+                        </a>
                         <p class="mt-2 mb-1 small stock-desc-clamp">@item.StockDesc</p>
                         <p class="mb-0 fw-semibold small">@item.SupplierCost.ToString("C")</p>
                         @if (!string.IsNullOrWhiteSpace(item.BrandName))
