@@ -48,6 +48,12 @@
                     <a href="@Model.Supplier.Website" target="_blank" rel="noopener">@Model.Supplier.Website</a>
                 </dd>
             }
+
+            <dt class="col-sm-2">Date Added</dt>
+            <dd class="col-sm-4"
+                data-utc="@Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC">
+                @Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC
+            </dd>
         </dl>
     </div>
 </div>
@@ -253,6 +259,18 @@
 }
 
 @section Scripts {
+    <script>
+        document.querySelectorAll('[data-utc]').forEach(el => {
+            const utcLabel = el.getAttribute('data-utc');
+            const iso = utcLabel.replace(' UTC', '').replace(' ', 'T') + 'Z';
+            const local = new Date(iso).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+            el.title = utcLabel;
+            el.textContent = local;
+        });
+    </script>
     <style>
         .stock-desc-clamp {
             display: -webkit-box;

@@ -10,5 +10,6 @@ public class SupplierDto
     public string? SupplierImage       { get; init; }
     public string? SupplierDescription { get; init; }
     public string? SupplierCategory    { get; init; }
-    public int     StockItemCount      { get; init; }
+    public int      StockItemCount      { get; init; }
+    public DateTime DateTimeAddedUtc    { get; init; }
 }

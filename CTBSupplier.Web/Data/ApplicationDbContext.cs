@@ -38,6 +38,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.SupplierImage).HasColumnName("supplierImage");
             entity.Property(e => e.SupplierDescription).HasColumnName("supplierDescription");
             entity.Property(e => e.SupplierCategory).HasColumnName("supplierCategory");
+            entity.Property(e => e.DateTimeAddedUtc)
+                  .HasColumnName("dateTimeAddedUTC")
+                  .HasDefaultValueSql("GETUTCDATE()")
+                  .ValueGeneratedOnAdd();
             entity.Property(e => e.SupplierAbnForLookups)
                   .HasColumnName("supplierAbnForLookups")
                   .HasComputedColumnSql("CAST(REPLACE(supplierAbn, ' ', '') AS nvarchar(20))", stored: true);

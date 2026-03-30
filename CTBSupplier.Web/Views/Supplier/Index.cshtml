@@ -20,6 +20,7 @@
             <th>Category</th>
             <th>Website</th>
             <th>Active</th>
+            <th>Date Added</th>
             <th class="text-end">Actions</th>
         </tr>
     </thead>
@@ -58,6 +59,9 @@
                         <span class="badge bg-secondary">No</span>
                     }
                 </td>
+                <td data-utc="@s.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC">
+                    @s.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC
+                </td>
                 <td class="text-end">
                     <a asp-action="Details" asp-route-id="@s.SupplierGUID" class="btn btn-sm btn-outline-info">Details</a>
                     <a asp-action="Edit" asp-route-id="@s.SupplierGUID" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -66,7 +70,22 @@
         }
         @if (!Model.Any())
         {
-            <tr><td colspan="7" class="text-center text-muted">No suppliers found.</td></tr>
+            <tr><td colspan="8" class="text-center text-muted">No suppliers found.</td></tr>
         }
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-utc]').forEach(el => {
+            const utcLabel = el.getAttribute('data-utc');
+            const iso = utcLabel.replace(' UTC', '').replace(' ', 'T') + 'Z';
+            const local = new Date(iso).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+            el.title = utcLabel;
+            el.textContent = local;
+        });
+    </script>
+}

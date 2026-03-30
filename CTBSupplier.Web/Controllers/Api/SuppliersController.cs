@@ -35,12 +35,20 @@ public class SuppliersController : ControllerBase
     ///     GET /api/v1/suppliers
     ///     GET /api/v1/suppliers?excludeAbn=51824753556
     ///     GET /api/v1/suppliers?excludeAbn=51824753556&amp;excludeAbn=12345678901
+    ///     GET /api/v1/suppliers?addedAfterUtc=2026-04-01T00:00:00Z
+    ///     GET /api/v1/suppliers?start=0&amp;pageSize=25
     /// </remarks>
     /// <param name="excludeAbn">Zero or more ABNs to exclude from the results.</param>
+    /// <param name="addedAfterUtc">Optional: only return suppliers added strictly after this UTC date/time.</param>
+    /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by supplier name then GUID.</param>
+    /// <param name="pageSize">Maximum number of results to return. Omit to return all matching suppliers.</param>
     [HttpGet]
     [Produces("application/json")]
     public async Task<ActionResult<IEnumerable<SupplierDto>>> GetSuppliers(
-        [FromQuery] List<string>? excludeAbn)
+        [FromQuery] List<string>? excludeAbn,
+        [FromQuery] DateTime? addedAfterUtc,
+        [FromQuery] int start = 0,
+        [FromQuery] int? pageSize = null)
     {
         // Strip all spaces from incoming ABNs so they match the persisted computed column
         var exclusions = (excludeAbn ?? new List<string>())
@@ -53,7 +61,18 @@ public class SuppliersController : ControllerBase
         if (exclusions.Count > 0)
             query = query.Where(s => !exclusions.Contains(s.SupplierAbnForLookups!));
 
-        var suppliers = await query
+        if (addedAfterUtc.HasValue)
+            query = query.Where(s => s.DateTimeAddedUtc > addedAfterUtc.Value);
+
+        IQueryable<Models.Supplier> pagedQuery = query
+            .OrderBy(s => s.SupplierName)
+            .ThenBy(s => s.SupplierGUID)
+            .Skip(start);
+
+        if (pageSize.HasValue && pageSize.Value > 0)
+            pagedQuery = pagedQuery.Take(pageSize.Value);
+
+        var suppliers = await pagedQuery
             .Select(s => new SupplierDto
             {
                 SupplierGUID        = s.SupplierGUID,
@@ -64,7 +83,8 @@ public class SuppliersController : ControllerBase
                 SupplierImage       = s.SupplierImage,
                 SupplierDescription = s.SupplierDescription,
                 SupplierCategory    = s.SupplierCategory,
-                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID)
+                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID),
+                DateTimeAddedUtc    = s.DateTimeAddedUtc
             })
             .ToListAsync();
 
@@ -99,7 +119,8 @@ public class SuppliersController : ControllerBase
                 SupplierImage       = s.SupplierImage,
                 SupplierDescription = s.SupplierDescription,
                 SupplierCategory    = s.SupplierCategory,
-                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID)
+                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID),
+                DateTimeAddedUtc    = s.DateTimeAddedUtc
             })
             .FirstOrDefaultAsync();
 
@@ -125,16 +146,21 @@ public class SuppliersController : ControllerBase
     ///     GET /api/v1/suppliers/search?abn=51 824 753 556
     ///     GET /api/v1/suppliers/search?supplierGuid=3fa85f64-5717-4562-b3fc-2c963f66afa6
     ///     GET /api/v1/suppliers/search?abn=51824753556&amp;supplierGuid=3fa85f64-5717-4562-b3fc-2c963f66afa6
+    ///     GET /api/v1/suppliers/search?abn=51824753556&amp;start=0&amp;pageSize=25
     /// </remarks>
     /// <param name="abn">ABN to search for (spaces are ignored).</param>
     /// <param name="supplierGuid">Supplier GUID to search for.</param>
+    /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by supplier name then GUID.</param>
+    /// <param name="pageSize">Maximum number of results to return. Omit to return all matching suppliers.</param>
     [HttpGet("search")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<SupplierDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<SupplierDto>>> SearchSuppliers(
         [FromQuery] string? abn,
-        [FromQuery] Guid? supplierGuid)
+        [FromQuery] Guid? supplierGuid,
+        [FromQuery] int start = 0,
+        [FromQuery] int? pageSize = null)
     {
         if (string.IsNullOrWhiteSpace(abn) && supplierGuid is null)
             return BadRequest("At least one of 'abn' or 'supplierGuid' must be provided.");
@@ -149,7 +175,15 @@ public class SuppliersController : ControllerBase
         if (supplierGuid is not null)
             query = query.Where(s => s.SupplierGUID == supplierGuid.Value);
 
-        var suppliers = await query
+        IQueryable<Models.Supplier> pagedQuery = query
+            .OrderBy(s => s.SupplierName)
+            .ThenBy(s => s.SupplierGUID)
+            .Skip(start);
+
+        if (pageSize.HasValue && pageSize.Value > 0)
+            pagedQuery = pagedQuery.Take(pageSize.Value);
+
+        var suppliers = await pagedQuery
             .Select(s => new SupplierDto
             {
                 SupplierGUID        = s.SupplierGUID,
@@ -160,7 +194,8 @@ public class SuppliersController : ControllerBase
                 SupplierImage       = s.SupplierImage,
                 SupplierDescription = s.SupplierDescription,
                 SupplierCategory    = s.SupplierCategory,
-                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID)
+                StockItemCount      = _db.StockItems.Count(i => i.SupplierGUID == s.SupplierGUID),
+                DateTimeAddedUtc    = s.DateTimeAddedUtc
             })
             .ToListAsync();
 
@@ -179,16 +214,21 @@ public class SuppliersController : ControllerBase
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?stockCategoryName=Cleaning
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?brandName=Dyson
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?stockCategoryName=Cleaning&amp;brandName=Dyson
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?start=0&amp;pageSize=50
     /// </remarks>
     /// <param name="supplierGuid">The GUID of the supplier.</param>
     /// <param name="stockCategoryName">Optional: return only items in this stock category.</param>
     /// <param name="brandName">Optional: return only items with this brand name.</param>
+    /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by stock code.</param>
+    /// <param name="pageSize">Maximum number of results to return. Omit to return all matching items.</param>
     [HttpGet("{supplierGuid:guid}/stockitems")]
     [Produces("application/json")]
     public async Task<ActionResult<IEnumerable<StockItemDto>>> GetStockItems(
         Guid supplierGuid,
         [FromQuery] string? stockCategoryName,
-        [FromQuery] string? brandName)
+        [FromQuery] string? brandName,
+        [FromQuery] int start = 0,
+        [FromQuery] int? pageSize = null)
     {
         if (!await _db.Suppliers.AnyAsync(s => s.SupplierGUID == supplierGuid))
             return NotFound();
@@ -202,8 +242,14 @@ public class SuppliersController : ControllerBase
         if (!string.IsNullOrWhiteSpace(brandName))
             query = query.Where(i => i.BrandName == brandName);
 
-        var items = await query
+        IQueryable<Models.StockItem> pagedQuery = query
             .OrderBy(i => i.StockCode)
+            .Skip(start);
+
+        if (pageSize.HasValue && pageSize.Value > 0)
+            pagedQuery = pagedQuery.Take(pageSize.Value);
+
+        var items = await pagedQuery
             .Select(i => new StockItemDto
             {
                 SupplierGUID          = i.SupplierGUID,
@@ -235,24 +281,35 @@ public class SuppliersController : ControllerBase
     /// Example:
     ///
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems/since?minDateAddedUtc=2026-04-01T00:00:00Z
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems/since?minDateAddedUtc=2026-04-01T00:00:00Z&amp;start=0&amp;pageSize=50
     /// </remarks>
     /// <param name="supplierGuid">The GUID of the supplier.</param>
     /// <param name="minDateAddedUtc">Only return items added strictly after this UTC date/time.</param>
+    /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by date added then stock code.</param>
+    /// <param name="pageSize">Maximum number of results to return. Omit to return all matching items.</param>
     [HttpGet("{supplierGuid:guid}/stockitems/since")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<StockItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<StockItemDto>>> GetStockItemsSince(
         Guid supplierGuid,
-        [FromQuery] DateTime minDateAddedUtc)
+        [FromQuery] DateTime minDateAddedUtc,
+        [FromQuery] int start = 0,
+        [FromQuery] int? pageSize = null)
     {
         if (!await _db.Suppliers.AnyAsync(s => s.SupplierGUID == supplierGuid))
             return NotFound();
 
-        var items = await _db.StockItems
+        IQueryable<Models.StockItem> pagedQuery = _db.StockItems
             .Where(i => i.SupplierGUID == supplierGuid && i.DateAddedUtc > minDateAddedUtc)
             .OrderBy(i => i.DateAddedUtc)
             .ThenBy(i => i.StockCode)
+            .Skip(start);
+
+        if (pageSize.HasValue && pageSize.Value > 0)
+            pagedQuery = pagedQuery.Take(pageSize.Value);
+
+        var items = await pagedQuery
             .Select(i => new StockItemDto
             {
                 SupplierGUID          = i.SupplierGUID,

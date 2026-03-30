@@ -39,6 +39,9 @@ public class Supplier
     [Display(Name = "Category")]
     public string? SupplierCategory { get; set; }
 
+    [Display(Name = "Date Added (UTC)")]
+    public DateTime DateTimeAddedUtc { get; set; }
+
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public string? SupplierAbnForLookups { get; set; }
 
