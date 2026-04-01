@@ -207,6 +207,17 @@ public class SuppliersController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
+    /// Returns 404 if the supplier does not exist.
+    ///
+    /// The response is a paged envelope:
+    ///
+    ///     {
+    ///       "data": [ { ... }, { ... } ],
+    ///       "totalCount": 729
+    ///     }
+    ///
+    /// <c>totalCount</c> is the total number of matching items across all pages (respecting any
+    /// <c>stockCategoryName</c> / <c>brandName</c> filters), regardless of <c>start</c> and <c>pageSize</c>.
     ///
     /// Example:
     ///
@@ -221,9 +232,12 @@ public class SuppliersController : ControllerBase
     /// <param name="brandName">Optional: return only items with this brand name.</param>
     /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by stock code.</param>
     /// <param name="pageSize">Maximum number of results to return. Omit to return all matching items.</param>
+    /// <returns>A <see cref="PagedResult{T}"/> containing the page of stock items and the total matching count.</returns>
     [HttpGet("{supplierGuid:guid}/stockitems")]
     [Produces("application/json")]
-    public async Task<ActionResult<IEnumerable<StockItemDto>>> GetStockItems(
+    [ProducesResponseType(typeof(PagedResult<StockItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResult<StockItemDto>>> GetStockItems(
         Guid supplierGuid,
         [FromQuery] string? stockCategoryName,
         [FromQuery] string? brandName,
@@ -241,6 +255,8 @@ public class SuppliersController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(brandName))
             query = query.Where(i => i.BrandName == brandName);
+
+        var totalCount = await query.CountAsync();
 
         IQueryable<Models.StockItem> pagedQuery = query
             .OrderBy(i => i.StockCode)
@@ -267,7 +283,7 @@ public class SuppliersController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new PagedResult<StockItemDto> { Data = items, TotalCount = totalCount });
     }
 
     /// <summary>
@@ -278,6 +294,16 @@ public class SuppliersController : ControllerBase
     /// Returns items where <c>dateAddedUTC</c> is strictly greater than <paramref name="minDateAddedUtc"/>.
     /// Returns 404 if the supplier does not exist.
     ///
+    /// The response is a paged envelope:
+    ///
+    ///     {
+    ///       "data": [ { ... }, { ... } ],
+    ///       "totalCount": 42
+    ///     }
+    ///
+    /// <c>totalCount</c> is the total number of items matching the date filter across all pages,
+    /// regardless of <c>start</c> and <c>pageSize</c>.
+    ///
     /// Example:
     ///
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems/since?minDateAddedUtc=2026-04-01T00:00:00Z
@@ -287,11 +313,12 @@ public class SuppliersController : ControllerBase
     /// <param name="minDateAddedUtc">Only return items added strictly after this UTC date/time.</param>
     /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by date added then stock code.</param>
     /// <param name="pageSize">Maximum number of results to return. Omit to return all matching items.</param>
+    /// <returns>A <see cref="PagedResult{T}"/> containing the page of stock items and the total matching count.</returns>
     [HttpGet("{supplierGuid:guid}/stockitems/since")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(IEnumerable<StockItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<StockItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IEnumerable<StockItemDto>>> GetStockItemsSince(
+    public async Task<ActionResult<PagedResult<StockItemDto>>> GetStockItemsSince(
         Guid supplierGuid,
         [FromQuery] DateTime minDateAddedUtc,
         [FromQuery] int start = 0,
@@ -300,8 +327,12 @@ public class SuppliersController : ControllerBase
         if (!await _db.Suppliers.AnyAsync(s => s.SupplierGUID == supplierGuid))
             return NotFound();
 
-        IQueryable<Models.StockItem> pagedQuery = _db.StockItems
-            .Where(i => i.SupplierGUID == supplierGuid && i.DateAddedUtc > minDateAddedUtc)
+        IQueryable<Models.StockItem> query = _db.StockItems
+            .Where(i => i.SupplierGUID == supplierGuid && i.DateAddedUtc > minDateAddedUtc);
+
+        var totalCount = await query.CountAsync();
+
+        IQueryable<Models.StockItem> pagedQuery = query
             .OrderBy(i => i.DateAddedUtc)
             .ThenBy(i => i.StockCode)
             .Skip(start);
@@ -327,7 +358,7 @@ public class SuppliersController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new PagedResult<StockItemDto> { Data = items, TotalCount = totalCount });
     }
 
     /// <summary>
