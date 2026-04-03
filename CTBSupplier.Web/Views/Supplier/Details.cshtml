@@ -29,11 +29,14 @@
                 }
             </dd>
 
-            @if (!string.IsNullOrWhiteSpace(Model.Supplier.SupplierCategory))
-            {
-                <dt class="col-sm-2">Category</dt>
-                <dd class="col-sm-4">@Model.Supplier.SupplierCategory</dd>
-            }
+            <dt class="col-sm-2">Category</dt>
+            <dd class="col-sm-4">@Model.Supplier.SupplierCategory</dd>
+
+            <dt class="col-sm-2">Date Added</dt>
+            <dd class="col-sm-4"
+                data-utc="@Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC">
+                @Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC
+            </dd>
 
             @if (!string.IsNullOrWhiteSpace(Model.Supplier.SupplierDescription))
             {
@@ -48,12 +51,6 @@
                     <a href="@Model.Supplier.Website" target="_blank" rel="noopener">@Model.Supplier.Website</a>
                 </dd>
             }
-
-            <dt class="col-sm-2">Date Added</dt>
-            <dd class="col-sm-4"
-                data-utc="@Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC">
-                @Model.Supplier.DateTimeAddedUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC
-            </dd>
         </dl>
     </div>
 </div>

@@ -203,7 +203,7 @@ public class SuppliersController : ControllerBase
     }
 
     /// <summary>
-    /// Returns stock items for a specific supplier, with optional filters.
+    /// Returns stock items for a specific supplier, with optional filters and sorting.
     /// </summary>
     /// <remarks>
     /// Requires a valid API key supplied in the <c>X-API-Key</c> request header.
@@ -217,20 +217,30 @@ public class SuppliersController : ControllerBase
     ///     }
     ///
     /// <c>totalCount</c> is the total number of matching items across all pages (respecting any
-    /// <c>stockCategoryName</c> / <c>brandName</c> filters), regardless of <c>start</c> and <c>pageSize</c>.
+    /// active filters), regardless of <c>start</c> and <c>pageSize</c>.
+    ///
+    /// Valid <c>sortBy</c> values: <c>stockCode</c> (default), <c>stockDesc</c>, <c>brandName</c>,
+    /// <c>supplierStockCode</c>, <c>stockCategoryName</c>.
     ///
     /// Example:
     ///
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?stockCategoryName=Cleaning
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?brandName=Dyson
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?stockDesc=brush
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?stockCategoryName=Cleaning&amp;brandName=Dyson
     ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?start=0&amp;pageSize=50
+    ///     GET /api/v1/suppliers/3fa85f64-5717-4562-b3fc-2c963f66afa6/stockitems?sortBy=stockDesc
     /// </remarks>
     /// <param name="supplierGuid">The GUID of the supplier.</param>
     /// <param name="stockCategoryName">Optional: return only items in this stock category.</param>
     /// <param name="brandName">Optional: return only items with this brand name.</param>
-    /// <param name="start">Zero-based offset into the sorted result set (default: 0). Results are sorted by stock code.</param>
+    /// <param name="stockDesc">Optional: return only items whose description contains this value (case-insensitive).</param>
+    /// <param name="sortBy">
+    /// Optional: field to sort results by. Accepted values: <c>stockCode</c> (default), <c>stockDesc</c>,
+    /// <c>brandName</c>, <c>supplierStockCode</c>, <c>stockCategoryName</c>.
+    /// </param>
+    /// <param name="start">Zero-based offset into the sorted result set (default: 0).</param>
     /// <param name="pageSize">Maximum number of results to return. Omit to return all matching items.</param>
     /// <returns>A <see cref="PagedResult{T}"/> containing the page of stock items and the total matching count.</returns>
     [HttpGet("{supplierGuid:guid}/stockitems")]
@@ -241,6 +251,8 @@ public class SuppliersController : ControllerBase
         Guid supplierGuid,
         [FromQuery] string? stockCategoryName,
         [FromQuery] string? brandName,
+        [FromQuery] string? stockDesc,
+        [FromQuery] string? sortBy,
         [FromQuery] int start = 0,
         [FromQuery] int? pageSize = null)
     {
@@ -256,11 +268,19 @@ public class SuppliersController : ControllerBase
         if (!string.IsNullOrWhiteSpace(brandName))
             query = query.Where(i => i.BrandName == brandName);
 
+        if (!string.IsNullOrWhiteSpace(stockDesc))
+            query = query.Where(i => i.StockDesc != null && i.StockDesc.Contains(stockDesc));
+
         var totalCount = await query.CountAsync();
 
-        IQueryable<Models.StockItem> pagedQuery = query
-            .OrderBy(i => i.StockCode)
-            .Skip(start);
+        IQueryable<Models.StockItem> pagedQuery = (sortBy?.ToLowerInvariant() switch
+        {
+            "stockdesc"         => query.OrderBy(i => i.StockDesc),
+            "brandname"         => query.OrderBy(i => i.BrandName),
+            "supplierstockcode" => query.OrderBy(i => i.SupplierStockCode),
+            "stockcategoryname" => query.OrderBy(i => i.StockCategoryName),
+            _                   => query.OrderBy(i => i.StockCode),
+        }).Skip(start);
 
         if (pageSize.HasValue && pageSize.Value > 0)
             pagedQuery = pagedQuery.Take(pageSize.Value);
