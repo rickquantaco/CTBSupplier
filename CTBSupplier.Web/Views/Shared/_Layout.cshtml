@@ -24,6 +24,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-controller="Supplier" asp-action="Index">Suppliers</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/doc/user-guide.html">User Guide</a>
+                        </li>
                         @{
                             var adminEmail = User.FindFirst("preferred_username")?.Value
                                           ?? User.FindFirst("email")?.Value
