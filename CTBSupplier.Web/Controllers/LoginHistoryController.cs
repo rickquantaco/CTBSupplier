@@ -26,7 +26,7 @@ public class LoginHistoryController : Controller
 
         var history = await _db.LoginHistories
             .OrderByDescending(h => h.AttemptedAt)
-            .Take(500)
+            .Take(100)
             .ToListAsync();
         return View(history);
     }
