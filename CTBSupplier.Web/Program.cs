@@ -139,6 +139,13 @@ public class Program
             .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
                 ApiKeyDefaults.AuthenticationScheme, _ => { });
 
+        // Named HttpClient used by Supplier/ValidateStockItemURLs
+        builder.Services.AddHttpClient("UrlValidator", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("CTBSupplier-UrlValidator/1.0");
+        });
+
         builder.Services.AddControllersWithViews()
             .AddMicrosoftIdentityUI()
             .AddJsonOptions(options =>

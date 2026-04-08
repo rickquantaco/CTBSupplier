@@ -58,8 +58,12 @@
 @* Stock Items section *@
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h4>Stock Items <small class="text-muted fs-6">(@Model.TotalCount total)</small></h4>
-    <a asp-controller="StockItem" asp-action="Create" asp-route-supplierGuid="@Model.Supplier.SupplierGUID"
-       class="btn btn-sm btn-primary">+ New Stock Item</a>
+    <div class="d-flex gap-2">
+        <a asp-action="ValidateStockItemURLs" asp-route-id="@Model.Supplier.SupplierGUID"
+           class="btn btn-sm btn-outline-secondary">&#10003; Validate URLs</a>
+        <a asp-controller="StockItem" asp-action="Create" asp-route-supplierGuid="@Model.Supplier.SupplierGUID"
+           class="btn btn-sm btn-primary">+ New Stock Item</a>
+    </div>
 </div>
 
 @* Filters *@

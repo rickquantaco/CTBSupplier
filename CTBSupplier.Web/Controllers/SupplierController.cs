@@ -12,11 +12,13 @@ public class SupplierController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly SupplierAccessService _access;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public SupplierController(ApplicationDbContext db, SupplierAccessService access)
+    public SupplierController(ApplicationDbContext db, SupplierAccessService access, IHttpClientFactory httpClientFactory)
     {
         _db = db;
         _access = access;
+        _httpClientFactory = httpClientFactory;
     }
 
     // GET: /Supplier
@@ -118,6 +120,75 @@ public class SupplierController : Controller
             AvailableBrands     = availableBrands,
             AvailableCategories = availableCategories,
             ViewMode            = viewMode
+        };
+
+        return View(vm);
+    }
+
+    // GET: /Supplier/ValidateStockItemURLs/{id}
+    public async Task<IActionResult> ValidateStockItemURLs(Guid id)
+    {
+        if (!await _access.CanAccessSupplierAsync(User, id))
+            return View("Forbidden");
+
+        var supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierGUID == id);
+        if (supplier == null) return NotFound();
+
+        var allItems = await _db.StockItems
+            .Where(i => i.SupplierGUID == id)
+            .OrderBy(i => i.StockCode)
+            .ToListAsync();
+
+        var withUrl    = allItems.Where(i => !string.IsNullOrWhiteSpace(i.StockMediaUrl)).ToList();
+        var withoutUrl = allItems.Count - withUrl.Count;
+
+        var client    = _httpClientFactory.CreateClient("UrlValidator");
+        var semaphore = new SemaphoreSlim(10);
+
+        var tasks = withUrl.Select(async item =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                var result = new UrlCheckResult
+                {
+                    StockCode    = item.StockCode,
+                    SupplierGUID = item.SupplierGUID,
+                    StockDesc    = item.StockDesc,
+                    Url          = item.StockMediaUrl!
+                };
+
+                try
+                {
+                    var request  = new HttpRequestMessage(HttpMethod.Head, item.StockMediaUrl);
+                    var response = await client.SendAsync(request);
+                    result.StatusCode = (int)response.StatusCode;
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorMessage = ex.Message;
+                }
+
+                return result;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var allResults    = await Task.WhenAll(tasks);
+        var failedResults = allResults
+            .Where(r => !r.IsSuccess)
+            .OrderBy(r => r.StockCode)
+            .ToList();
+
+        var vm = new ValidateStockItemUrlsViewModel
+        {
+            Supplier       = supplier,
+            FailedResults  = failedResults,
+            TotalWithUrl   = withUrl.Count,
+            TotalWithoutUrl = withoutUrl
         };
 
         return View(vm);
