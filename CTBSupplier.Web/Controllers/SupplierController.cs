@@ -38,6 +38,7 @@ public class SupplierController : Controller
     public async Task<IActionResult> Details(
         Guid id, int page = 1, int pageSize = 25,
         string? filterBrand = null, string? filterCategory = null,
+        string? filterDescription = null,
         string? viewMode = null)
     {
         if (!await _access.CanAccessSupplierAsync(User, id))
@@ -93,6 +94,9 @@ public class SupplierController : Controller
         if (!string.IsNullOrWhiteSpace(filterCategory))
             query = query.Where(i => i.StockCategoryName == filterCategory);
 
+        if (!string.IsNullOrWhiteSpace(filterDescription))
+            query = query.Where(i => i.StockDesc.Contains(filterDescription));
+
         query = query.OrderBy(i => i.StockCode);
 
         var total = await query.CountAsync();
@@ -110,6 +114,7 @@ public class SupplierController : Controller
             TotalCount          = total,
             FilterBrand         = filterBrand,
             FilterCategory      = filterCategory,
+            FilterDescription   = filterDescription,
             AvailableBrands     = availableBrands,
             AvailableCategories = availableCategories,
             ViewMode            = viewMode

@@ -10,8 +10,9 @@ public class SupplierDetailsViewModel
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
     // Active filters
-    public string? FilterBrand    { get; set; }
-    public string? FilterCategory { get; set; }
+    public string? FilterBrand        { get; set; }
+    public string? FilterCategory     { get; set; }
+    public string? FilterDescription  { get; set; }
 
     // Distinct values for this supplier — used to populate the filter dropdowns
     public IEnumerable<string> AvailableBrands     { get; set; } = Enumerable.Empty<string>();
