@@ -22,6 +22,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\doc\" />
+  </ItemGroup>
+
 
   <!-- After publishing as a container, update the Azure Container App to pull the new image -->
   <Target Name="UpdateAzureContainerApp" AfterTargets="Publish" Condition="'$(PublishProtocol)' == 'ContainerRegistry'">

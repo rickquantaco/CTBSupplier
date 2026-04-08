@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CTB Supplier — User Guide</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.65;
+            color: #212529;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ── Layout ── */
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        nav.sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: #1a1f2e;
+            color: #c9d1e0;
+            padding: 2rem 0 3rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        nav.sidebar .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1rem;
+        }
+
+        nav.sidebar .brand span {
+            color: #5b9bd5;
+        }
+
+        nav.sidebar ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav.sidebar li a {
+            display: block;
+            padding: 0.4rem 1.5rem;
+            color: #adb5bd;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        nav.sidebar li a:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        nav.sidebar .nav-section {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6c757d;
+            padding: 1.25rem 1.5rem 0.35rem;
+        }
+
+        main {
+            flex: 1;
+            min-width: 0;
+            padding: 3rem 3.5rem;
+            max-width: 900px;
+        }
+
+        /* ── Typography ── */
+        h1 { font-size: 2rem; font-weight: 700; margin: 0 0 0.25rem; color: #1a1f2e; }
+        h2 { font-size: 1.45rem; font-weight: 700; margin: 2.5rem 0 0.75rem; color: #1a1f2e; padding-bottom: 0.4rem; border-bottom: 2px solid #dee2e6; }
+        h3 { font-size: 1.1rem; font-weight: 700; margin: 1.75rem 0 0.5rem; color: #343a40; }
+        h4 { font-size: 0.95rem; font-weight: 700; margin: 1.25rem 0 0.35rem; color: #495057; }
+        p  { margin: 0 0 0.85rem; }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-version {
+            font-size: 0.8rem;
+            color: #adb5bd;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ── Callout boxes ── */
+        .callout {
+            border-left: 4px solid;
+            padding: 0.85rem 1.1rem;
+            margin: 1rem 0 1.25rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .callout-warning  { border-color: #ffc107; background: #fff9e6; }
+        .callout-info     { border-color: #5b9bd5; background: #eef4fb; }
+        .callout-danger   { border-color: #dc3545; background: #fdf2f3; }
+        .callout-success  { border-color: #28a745; background: #f0faf2; }
+
+        .callout strong { margin-bottom: 0.25rem; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: #1a1f2e;
+            color: #fff;
+            text-align: left;
+            padding: 0.55rem 0.85rem;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.5rem 0.85rem;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: #f8f9fa; }
+
+        /* ── Badges / pills ── */
+        .badge {
+            display: inline-block;
+            padding: 0.2em 0.6em;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .badge-admin   { background: #1a1f2e; color: #fff; }
+        .badge-user    { background: #5b9bd5; color: #fff; }
+        .badge-success { background: #28a745; color: #fff; }
+        .badge-danger  { background: #dc3545; color: #fff; }
+        .badge-warning { background: #ffc107; color: #212529; }
+
+        /* ── Steps ── */
+        ol.steps { padding-left: 1.25rem; }
+        ol.steps li { margin-bottom: 0.5rem; }
+
+        /* ── Section anchor target offset ── */
+        section { scroll-margin-top: 1.5rem; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            nav.sidebar { display: none; }
+            main { padding: 2rem 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+    <!-- ── Sidebar navigation ── -->
+    <nav class="sidebar" aria-label="Page navigation">
+        <div class="brand">CTB <span>Supplier</span></div>
+        <ul>
+            <li class="nav-section">Getting started</li>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#access">Getting access</a></li>
+            <li><a href="#login">Signing in</a></li>
+
+            <li class="nav-section">Suppliers &amp; Stock</li>
+            <li><a href="#suppliers">Supplier list</a></li>
+            <li><a href="#supplier-details">Supplier details</a></li>
+            <li><a href="#stock-items">Stock items</a></li>
+            <li><a href="#url-validation">URL validation</a></li>
+
+            <li class="nav-section">Administration</li>
+            <li><a href="#user-management">User management</a></li>
+            <li><a href="#permissions">Permissions</a></li>
+            <li><a href="#supplier-restrictions">Supplier restrictions</a></li>
+            <li><a href="#api-keys">API keys</a></li>
+            <li><a href="#login-history">Login history</a></li>
+
+            <li class="nav-section">Reference</li>
+            <li><a href="#roles-summary">Roles summary</a></li>
+            <li><a href="#faq">FAQ</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── Main content ── -->
+    <main>
+
+        <h1>CTB Supplier — User Guide</h1>
+        <p class="subtitle">Cooking the Books — Supplier &amp; Stock Item Management Portal</p>
+        <p class="doc-version">Document version 1.0 &nbsp;|&nbsp; April 2026</p>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                The <strong>CTB Supplier Portal</strong> is a web-based application for managing supplier profiles
+                and their associated stock items. It provides a single place to:
+            </p>
+            <ul>
+                <li>Maintain a catalogue of suppliers, including contact details, ABN, category, and website.</li>
+                <li>Manage stock items (products) for each supplier — pricing, units, categories, and media images.</li>
+                <li>Control which users can access the system and which suppliers they are permitted to view.</li>
+                <li>Generate API keys so that external systems (e.g. mobile apps, partner portals) can read supplier data programmatically.</li>
+                <li>Validate the health of product image URLs in bulk.</li>
+            </ul>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="access">
+            <h2>Getting access</h2>
+
+            <div class="callout callout-danger">
+                <strong>Two-step access requirement</strong>
+                Access to CTB Supplier requires <em>both</em> of the following conditions to be met.
+                Satisfying only one is not sufficient to sign in.
+            </div>
+
+            <h3>Step 1 — Microsoft Entra authorisation</h3>
+            <p>
+                Your organisation's IT administrator must have added your email address to the
+                <strong>Microsoft Entra ID</strong> (formerly Azure Active Directory) tenant used by this
+                application. This gives you a valid organisational identity that the system can authenticate.
+            </p>
+            <p>
+                If you can sign in to other Microsoft 365 or Azure services with your
+                <code>@cookingthebooks.com.au</code> account, Step 1 is already satisfied.
+            </p>
+
+            <h3>Step 2 — Registration in the CTB Supplier User List</h3>
+            <p>
+                Even after Microsoft Entra authentication succeeds, the application checks that your email
+                address exists in its own internal <strong>User List</strong> and that your account is marked
+                <strong>Active</strong>. If your email is not found, or your account has been deactivated, you
+                will be shown an access-denied page and will not be able to proceed.
+            </p>
+            <p>
+                A system administrator must add your email address to the User List (see
+                <a href="#user-management">User management</a>) before you can use the application.
+            </p>
+
+            <div class="callout callout-info">
+                <strong>What to do if you cannot sign in</strong>
+                Contact your CTB Supplier administrator and ask them to:
+                <ol class="steps" style="margin-top:0.4rem;">
+                    <li>Confirm your Microsoft 365 account exists in the organisation's Entra tenant.</li>
+                    <li>Add your email address to the CTB Supplier User List and ensure <em>Active</em> is checked.</li>
+                </ol>
+            </div>
+
+            <h3>Security and what you can see</h3>
+            <p>
+                Once you have access, what you can <em>see</em> and what you can <em>do</em> are both governed
+                inside this application:
+            </p>
+            <table>
+                <thead><tr><th>Control</th><th>What it governs</th><th>Managed by</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Supplier restrictions</strong></td>
+                        <td>Which suppliers a user is permitted to view and work with. A user with no
+                            restrictions can see all suppliers. A user with restrictions can only see
+                            the specific suppliers that have been assigned to them.</td>
+                        <td>Administrator via <em>Admin &rarr; Users &rarr; Suppliers</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Permissions</strong></td>
+                        <td>What actions a user may perform — for example, whether they can access the
+                            Admin section to manage other users, permissions, and API keys.</td>
+                        <td>Administrator via <em>Admin &rarr; Users &rarr; Permissions</em></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="login">
+            <h2>Signing in</h2>
+            <ol class="steps">
+                <li>Navigate to the CTB Supplier Portal URL provided by your administrator.</li>
+                <li>Click the <strong>Sign in</strong> button in the top-right corner of the page.</li>
+                <li>You will be redirected to the <strong>Microsoft sign-in page</strong>. Enter your
+                    organisational email and password (or use single sign-on if already signed in to
+                    Microsoft 365).</li>
+                <li>Upon successful authentication, you are returned to the CTB Supplier Portal and
+                    signed in automatically.</li>
+            </ol>
+            <p>
+                To sign out, click your name in the top-right corner and select <strong>Sign out</strong>.
+            </p>
+
+            <div class="callout callout-warning">
+                <strong>Session note</strong>
+                Your session is tied to your Microsoft Entra token. If your IT administrator disables or
+                removes your Entra account, or if a CTB Supplier administrator deactivates your User List
+                entry, you will lose access on your next sign-in attempt.
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="suppliers">
+            <h2>Supplier list</h2>
+            <p>
+                The <strong>Suppliers</strong> page is the home screen of the application. It lists every
+                supplier you have permission to view.
+            </p>
+            <table>
+                <thead><tr><th>Column</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>Image</td><td>Supplier logo, if a media URL has been set.</td></tr>
+                    <tr><td>Supplier Name</td><td>The supplier's trading name.</td></tr>
+                    <tr><td>ABN</td><td>Australian Business Number.</td></tr>
+                    <tr><td>Category</td><td>The broad category this supplier belongs to.</td></tr>
+                    <tr><td>Website</td><td>Clickable link to the supplier's website, if recorded.</td></tr>
+                    <tr><td>Active</td><td>Whether the supplier is currently active (<span class="badge badge-success">Yes</span> / <span class="badge badge-warning">No</span>).</td></tr>
+                    <tr><td>Date Added</td><td>When the supplier record was first created. Displayed in your local time zone.</td></tr>
+                </tbody>
+            </table>
+            <p>
+                Click <strong>Details</strong> to view a supplier's full profile and stock items, or
+                <strong>Edit</strong> to modify their details.
+            </p>
+            <p>
+                Users who are restricted to specific suppliers will see a notice indicating their access
+                is limited and will not see the <strong>+ New Supplier</strong> button.
+            </p>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="supplier-details">
+            <h2>Supplier details</h2>
+            <p>
+                The Supplier Details page displays a supplier's full profile together with all of their
+                stock items.
+            </p>
+
+            <h3>Filtering stock items</h3>
+            <p>Three filters can be applied simultaneously — all active filters are combined (AND logic):</p>
+            <table>
+                <thead><tr><th>Filter</th><th>How it works</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Brand</strong></td><td>Select from a dropdown of all brands recorded for this supplier. Choose <em>(No Brand)</em> to show items with no brand assigned.</td></tr>
+                    <tr><td><strong>Category</strong></td><td>Select from a dropdown of all categories recorded for this supplier.</td></tr>
+                    <tr><td><strong>Description</strong></td><td>Type any word or phrase to search within the stock item description (case-insensitive contains search).</td></tr>
+                </tbody>
+            </table>
+            <p>
+                Click <strong>Filter</strong> to apply. A <strong>Clear</strong> button appears whenever any
+                filter is active — clicking it removes all filters and returns to the full list.
+            </p>
+            <p>
+                Filter values are preserved when you change the page size, switch between List and Grid
+                view, or navigate between pages.
+            </p>
+
+            <h3>View modes</h3>
+            <p>
+                Toggle between <strong>List</strong> view (a detailed table) and <strong>Grid</strong>
+                view (product cards with images) using the buttons at the top-right of the stock items
+                section. Your preference is remembered in a browser cookie for 12 months.
+            </p>
+
+            <h3>Pagination</h3>
+            <p>
+                Use the <strong>Per page</strong> selector to show 25, 50, or 100 items at a time.
+                Navigate between pages using the numbered pagination controls at the bottom of the page.
+            </p>
+
+            <h3>Actions</h3>
+            <ul>
+                <li><strong>Edit Supplier</strong> — modify the supplier's name, ABN, website, description, category, or active status.</li>
+                <li><strong>+ New Stock Item</strong> — add a new product to this supplier.</li>
+                <li><strong>Validate URLs</strong> — run a health check on all product image URLs (see <a href="#url-validation">URL validation</a>).</li>
+            </ul>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="stock-items">
+            <h2>Stock items</h2>
+            <p>
+                Stock items are the individual products that belong to a supplier. They can be accessed
+                either from the <strong>Supplier Details</strong> page or from the global
+                <strong>Stock Items</strong> section (which shows items across all suppliers you can access).
+            </p>
+
+            <h3>Stock item fields</h3>
+            <table>
+                <thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>Stock Code</td><td>Yes</td><td>Your internal product code for this item (max 250 characters).</td></tr>
+                    <tr><td>Description</td><td>Yes</td><td>Full text description of the product (max 1,000 characters).</td></tr>
+                    <tr><td>Brand Name</td><td>No</td><td>The brand or manufacturer (max 255 characters).</td></tr>
+                    <tr><td>Supplier Stock Code</td><td>Yes</td><td>The supplier's own product code (max 200 characters).</td></tr>
+                    <tr><td>Supplier Cost</td><td>Yes</td><td>The cost price from the supplier (currency field).</td></tr>
+                    <tr><td>Stock Unit</td><td>No</td><td>Quantity per unit (numeric).</td></tr>
+                    <tr><td>Unit of Measurement</td><td>Yes</td><td>e.g. <em>each</em>, <em>kg</em>, <em>L</em> (max 50 characters).</td></tr>
+                    <tr><td>Stock Category</td><td>Yes</td><td>Product category (max 255 characters).</td></tr>
+                    <tr><td>Media URL</td><td>No</td><td>URL of the product image. A live preview is shown as you type. Used in Grid view and URL validation. (max 1,000 characters)</td></tr>
+                    <tr><td>GST Applied</td><td>—</td><td>Check if GST is applicable to this item.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="callout callout-info">
+                <strong>Image preview</strong>
+                When creating or editing a stock item, pasting a URL into the <em>Media URL</em> field
+                immediately shows a 150×150 px preview of the image so you can confirm it is correct
+                before saving.
+            </div>
+
+            <h3>Editing a stock item</h3>
+            <p>
+                From the Supplier Details page, click the <strong>Stock Code</strong> link in list view
+                (or the card header in grid view) to open the Edit screen for that item.
+            </p>
+
+            <h3>Deleting a stock item</h3>
+            <p>
+                From the global Stock Items list, use the <strong>Delete</strong> button on the row.
+                A confirmation screen will be shown before the deletion is committed. Deletion is
+                permanent and cannot be undone.
+            </p>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="url-validation">
+            <h2>URL validation</h2>
+            <p>
+                The <strong>Validate URLs</strong> tool (accessible via the button on any Supplier Details
+                page) performs a bulk health check on every product image URL recorded for that supplier.
+            </p>
+
+            <h3>How it works</h3>
+            <p>
+                When you click <strong>Validate URLs</strong>, the system sends an HTTP
+                <code>HEAD</code> request to each recorded Media URL — up to 10 requests simultaneously
+                — and records the result. The page is returned once all checks are complete.
+            </p>
+
+            <div class="callout callout-warning">
+                <strong>Please wait</strong>
+                For suppliers with a large number of stock items, the check may take several seconds
+                to complete. Do not navigate away while the page is loading.
+            </div>
+
+            <h3>Reading the results</h3>
+            <p>Four summary tiles are shown at the top of the page:</p>
+            <table>
+                <thead><tr><th>Tile</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>URLs checked</strong></td><td>Total number of items that had a Media URL and were tested.</td></tr>
+                    <tr><td><strong>Passed</strong></td><td>URLs that returned an HTTP 2xx (success) response.</td></tr>
+                    <tr><td><strong>Failed</strong></td><td>URLs that returned a non-success HTTP status or could not be reached at all.</td></tr>
+                    <tr><td><strong>No URL set</strong></td><td>Items that have no Media URL recorded (shown only when at least one item has no URL).</td></tr>
+                </tbody>
+            </table>
+            <p>
+                If any URLs failed, a table is shown listing each failure with:
+            </p>
+            <ul>
+                <li>The <strong>Stock Code</strong> (linked directly to the Edit screen for that item).</li>
+                <li>The item's <strong>Description</strong>.</li>
+                <li>The <strong>URL</strong> that was tested (opens in a new tab when clicked).</li>
+                <li>The <strong>Result</strong> — either an HTTP status badge (e.g. <span class="badge badge-danger">HTTP 404</span>) or a <span class="badge badge-warning">Error</span> badge for network-level failures such as DNS errors or timeouts.</li>
+                <li>An <strong>Edit</strong> button to jump straight to the stock item and correct the URL.</li>
+            </ul>
+            <p>
+                If all URLs passed, a green success message is displayed instead of the table.
+            </p>
+
+            <div class="callout callout-info">
+                <strong>Note on HTTP 405 responses</strong>
+                Some image hosting servers do not support HEAD requests and return
+                <code>HTTP 405 Method Not Allowed</code>. This does not necessarily mean the image
+                is missing — you can click the URL link to verify it loads in your browser.
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="user-management">
+            <h2>User management</h2>
+
+            <div class="callout callout-warning">
+                <strong>Admin only</strong>
+                The <em>Admin</em> menu is only visible to users who have been granted the
+                <strong>Add/Update AppUsers</strong> permission.
+            </div>
+
+            <p>
+                Navigate to <strong>Admin &rarr; Users</strong> to manage the list of people who are
+                permitted to use the CTB Supplier Portal.
+            </p>
+
+            <h3>Adding a new user</h3>
+            <ol class="steps">
+                <li>Click <strong>+ New User</strong>.</li>
+                <li>Enter the user's <strong>Full Name</strong> and <strong>Email Address</strong>.
+                    The email address must exactly match the address registered in Microsoft Entra.</li>
+                <li>Ensure <strong>Active</strong> is checked.</li>
+                <li>Click <strong>Save</strong>.</li>
+                <li>Optionally, assign <a href="#permissions">permissions</a> and
+                    <a href="#supplier-restrictions">supplier restrictions</a> to the new user.</li>
+            </ol>
+
+            <div class="callout callout-danger">
+                <strong>Important</strong>
+                Adding a user here does <em>not</em> create their Microsoft account. The user must
+                already exist in your organisation's Microsoft Entra tenant. This step only grants
+                them access to the CTB Supplier Portal after they authenticate via Microsoft.
+            </div>
+
+            <h3>Deactivating a user</h3>
+            <p>
+                To temporarily revoke access without deleting the account, click <strong>Edit</strong>
+                next to the user, uncheck <strong>Active</strong>, and save. The user will be shown an
+                access-denied page on their next sign-in attempt.
+            </p>
+
+            <h3>Deleting a user</h3>
+            <p>
+                Click <strong>Delete</strong> next to the user and confirm. This permanently removes
+                the user record along with all of their associated permissions and supplier restrictions.
+                This action cannot be undone.
+            </p>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="permissions">
+            <h2>Permissions</h2>
+            <p>
+                Permissions control what actions a user is allowed to perform within the application.
+                They are assigned per-user from <strong>Admin &rarr; Users &rarr; Permissions</strong>
+                (the Permissions button on any user row).
+            </p>
+
+            <h3>Available permission</h3>
+            <table>
+                <thead><tr><th>Permission</th><th>What it grants</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Add/Update AppUsers</strong></td>
+                        <td>
+                            Access to the entire <strong>Admin</strong> menu, including:
+                            user management, permission definitions, login history, and API key management.
+                            Users without this permission cannot see or access the Admin section at all.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Granting or revoking a permission</h3>
+            <ol class="steps">
+                <li>Go to <strong>Admin &rarr; Users</strong>.</li>
+                <li>Click <strong>Permissions</strong> on the row of the user to modify.</li>
+                <li>Check or uncheck the desired permission.</li>
+                <li>Click <strong>Save</strong>.</li>
+            </ol>
+
+            <h3>Managing the permissions list</h3>
+            <p>
+                The set of available permissions itself is managed under <strong>Admin &rarr; Permissions</strong>.
+                New permission types can be added and existing ones renamed or deleted here. Deleting a
+                permission type removes it from all users who held it.
+            </p>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="supplier-restrictions">
+            <h2>Supplier restrictions</h2>
+            <p>
+                By default, a user with no restrictions can <strong>see and work with all suppliers</strong>.
+                Supplier restrictions allow you to limit a user to a specific subset of suppliers.
+            </p>
+            <p>
+                This is useful when, for example, an external user or a team member should only be able
+                to access data for the suppliers they are responsible for.
+            </p>
+
+            <h3>Applying restrictions to a user</h3>
+            <ol class="steps">
+                <li>Go to <strong>Admin &rarr; Users</strong>.</li>
+                <li>Click <strong>Suppliers</strong> on the row of the user to restrict.</li>
+                <li>Check the boxes next to each supplier this user is permitted to access.</li>
+                <li>Click <strong>Save</strong>.</li>
+            </ol>
+
+            <div class="callout callout-warning">
+                <strong>Leave all unticked to grant full access</strong>
+                If no suppliers are checked, the user is treated as unrestricted and can access
+                <em>all</em> suppliers. Only check boxes to <em>limit</em> access to specific suppliers.
+            </div>
+
+            <h3>Effect of restrictions</h3>
+            <ul>
+                <li>The <strong>Supplier list</strong> shows only the permitted suppliers.</li>
+                <li>Restricted users cannot create new suppliers.</li>
+                <li>Attempts to directly navigate to a restricted supplier's URL will be blocked with
+                    a Forbidden page.</li>
+                <li>The global <strong>Stock Items</strong> list is also filtered to show only items
+                    belonging to permitted suppliers.</li>
+            </ul>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="api-keys">
+            <h2>API keys</h2>
+            <p>
+                API keys allow external systems to read supplier data programmatically via the
+                CTB Supplier REST API. They are managed under <strong>Admin &rarr; API Keys</strong>.
+            </p>
+
+            <div class="callout callout-danger">
+                <strong>The key is shown only once</strong><br />
+                When a new API key is generated, the full key value is displayed
+                <strong>only on the creation screen</strong>. Only a one-way hash is stored in the
+                database. If the key is lost, it cannot be recovered — generate a new one.
+            </div>
+
+            <h3>Generating a new key</h3>
+            <ol class="steps">
+                <li>Click <strong>+ Generate New Key</strong>.</li>
+                <li>Enter a descriptive <strong>Key Name</strong> that identifies the consumer
+                    (e.g. <em>Mobile App</em>, <em>Partner Portal</em>).</li>
+                <li>Click <strong>Generate</strong>.</li>
+                <li>On the next screen, <strong>copy the displayed key immediately</strong> and store
+                    it securely. The key will not be shown again.</li>
+            </ol>
+
+            <h3>Using an API key</h3>
+            <p>
+                Include the key in every API request as the <code>X-API-Key</code> HTTP header:
+            </p>
+            <pre style="background:#1a1f2e;color:#c9d1e0;padding:0.85rem 1rem;border-radius:4px;font-size:0.85rem;overflow-x:auto;">GET /api/v1/suppliers
+X-API-Key: CTB_your_key_here</pre>
+            <p>Refer to the interactive API documentation at <code>/swagger</code> for full endpoint details.</p>
+
+            <h3>Revoking or deleting a key</h3>
+            <ul>
+                <li><strong>Revoke</strong> — disables the key without removing it. It can be re-enabled later. Use this for temporary suspension.</li>
+                <li><strong>Delete</strong> — permanently removes the key. Any system using it will immediately lose API access.</li>
+            </ul>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="login-history">
+            <h2>Login history</h2>
+            <p>
+                The <strong>Login History</strong> page (<em>Admin &rarr; Login History</em>) shows the
+                most recent 100 sign-in attempts to the CTB Supplier Portal.
+            </p>
+            <table>
+                <thead><tr><th>Column</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>Login Name</td><td>The email address used in the sign-in attempt.</td></tr>
+                    <tr><td>Attempted At</td><td>Date and time of the attempt, displayed in your local time zone (hover for UTC).</td></tr>
+                    <tr><td>Result</td><td><span class="badge badge-success">Success</span> — authenticated and authorised. &nbsp; <br />
+					<span class="badge badge-danger">Failed</span> — email not found in the User List, or account is inactive.</td></tr>
+                    <tr><td>IP Address</td><td>The network address from which the sign-in was attempted.</td></tr>
+                </tbody>
+            </table>
+            <p>
+                This log is read-only and is useful for auditing access and investigating unexpected
+                sign-in attempts.
+            </p>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="roles-summary">
+            <h2>Roles summary</h2>
+            <p>
+                The table below summarises what each type of user can do in the system.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Capability</th>
+                        <th>Standard user</th>
+                        <th>Standard user<br>(restricted)</th>
+                        <th>Admin user<br>(Add/Update AppUsers)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>View all suppliers</td><td>Yes</td><td>Permitted only</td><td>Yes</td></tr>
+                    <tr><td>Create / edit suppliers</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+                    <tr><td>View stock items</td><td>Yes</td><td>Permitted suppliers only</td><td>Yes</td></tr>
+                    <tr><td>Create / edit / delete stock items</td><td>Yes</td><td>Permitted suppliers only</td><td>Yes</td></tr>
+                    <tr><td>Validate stock item URLs</td><td>Yes</td><td>Permitted suppliers only</td><td>Yes</td></tr>
+                    <tr><td>Manage users &amp; permissions</td><td>No</td><td>No</td><td>Yes</td></tr>
+                    <tr><td>Manage supplier restrictions</td><td>No</td><td>No</td><td>Yes</td></tr>
+                    <tr><td>Generate / revoke API keys</td><td>No</td><td>No</td><td>Yes</td></tr>
+                    <tr><td>View login history</td><td>No</td><td>No</td><td>Yes</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <section id="faq">
+            <h2>Frequently asked questions</h2>
+
+            <h3>I can sign in to Microsoft 365 but not to CTB Supplier. What should I do?</h3>
+            <p>
+                Your Microsoft account is valid, but you have not yet been added to the CTB Supplier
+                User List. Contact your administrator and ask them to add your email address under
+                <strong>Admin &rarr; Users</strong>.
+            </p>
+
+            <h3>I used to have access but now I see an "Inactive" message.</h3>
+            <p>
+                Your account has been deactivated in the User List. Contact your administrator to have
+                your account re-enabled.
+            </p>
+
+            <h3>Why can I only see some suppliers and not others?</h3>
+            <p>
+                Your account has supplier restrictions applied. You will only see the suppliers that
+                have been assigned to you. Contact your administrator if you need access to additional
+                suppliers.
+            </p>
+
+            <h3>The Validate URLs page is taking a long time. Is that normal?</h3>
+            <p>
+                Yes. The check sends a real HTTP request to every product image URL. For suppliers
+                with many stock items this can take 10–20 seconds or more. Leave the page open until
+                it finishes loading.
+            </p>
+
+            <h3>A URL shows HTTP 405 in the validation results. Does that mean the image is broken?</h3>
+            <p>
+                Not necessarily. HTTP 405 means the server does not support the HEAD request method
+                used by the validator. Click the URL link on the results page to open it in a new tab
+                and verify whether the image actually loads.
+            </p>
+
+            <h3>I generated an API key but forgot to copy it. Can I retrieve it?</h3>
+            <p>
+                No. Only a one-way cryptographic hash of the key is stored. The plaintext key is
+                displayed only once at creation. You will need to generate a new key and update any
+                systems that were using the old one.
+            </p>
+
+            <h3>Where can I find the REST API documentation?</h3>
+            <p>
+                The interactive Swagger documentation is available at
+                <strong>/swagger</strong> on the same host as the portal.
+                All API requests require a valid API key in the <code>X-API-Key</code> header.
+            </p>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>
