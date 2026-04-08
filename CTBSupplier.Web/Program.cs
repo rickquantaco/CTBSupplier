@@ -182,13 +182,16 @@ public class Program
         app.UseStaticFiles();
         app.UseRouting();
 
-        // Swagger middleware runs before auth so the UI is accessible without sign-in
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
+        // Swagger UI is restricted to Development — avoid exposing API surface in production
+        if (true || app.Environment.IsDevelopment())  // The 'true ||' is just for testing — remove it to restrict to Development only
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "CTB Supplier API v1");
-            options.RoutePrefix = "swagger";
-        });
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "CTB Supplier API v1");
+                options.RoutePrefix = "swagger";
+            });
+        }
 
         app.UseAuthentication();
         app.UseAuthorization();

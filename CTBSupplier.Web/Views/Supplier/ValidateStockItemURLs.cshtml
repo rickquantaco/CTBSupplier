@@ -73,7 +73,16 @@ else
                     </td>
                     <td>@item.StockDesc</td>
                     <td class="text-break">
-                        <a href="@item.Url" target="_blank" rel="noopener">@item.Url</a>
+                        @{ bool urlSafe = item.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                                       || item.Url.StartsWith("http://",  StringComparison.OrdinalIgnoreCase); }
+                        @if (urlSafe)
+                        {
+                            <a href="@item.Url" target="_blank" rel="noopener">@item.Url</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic">@item.Url</span>
+                        }
                     </td>
                     <td class="text-nowrap">
                         @if (item.StatusCode.HasValue)

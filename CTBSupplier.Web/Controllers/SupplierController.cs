@@ -160,9 +160,16 @@ public class SupplierController : Controller
 
                 try
                 {
-                    var request  = new HttpRequestMessage(HttpMethod.Head, item.StockMediaUrl);
-                    var response = await client.SendAsync(request);
-                    result.StatusCode = (int)response.StatusCode;
+                    if (!await IsSafeExternalUrlAsync(item.StockMediaUrl))
+                    {
+                        result.ErrorMessage = "Blocked: URL must use http/https and must not resolve to a private or internal address.";
+                    }
+                    else
+                    {
+                        var request  = new HttpRequestMessage(HttpMethod.Head, item.StockMediaUrl);
+                        var response = await client.SendAsync(request);
+                        result.StatusCode = (int)response.StatusCode;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -268,5 +275,50 @@ public class SupplierController : Controller
             await _db.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    // Returns true only if the URL is http/https and resolves to a public (non-private) IP address.
+    private static async Task<bool> IsSafeExternalUrlAsync(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) return false;
+
+        try
+        {
+            var addresses = await System.Net.Dns.GetHostAddressesAsync(uri.Host);
+            return addresses.Length > 0 && !addresses.Any(IsPrivateIpAddress);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsPrivateIpAddress(System.Net.IPAddress ip)
+    {
+        if (ip.IsIPv4MappedToIPv6) ip = ip.MapToIPv4();
+
+        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+        {
+            var b = ip.GetAddressBytes();
+            return b[0] == 127                                       // 127.0.0.0/8   loopback
+                || b[0] == 10                                        // 10.0.0.0/8    private
+                || (b[0] == 172 && b[1] >= 16 && b[1] <= 31)        // 172.16.0.0/12 private
+                || (b[0] == 192 && b[1] == 168)                     // 192.168.0.0/16 private
+                || (b[0] == 169 && b[1] == 254)                     // 169.254.0.0/16 link-local / IMDS
+                || b[0] == 0                                         // 0.0.0.0/8
+                || (b[0] == 100 && b[1] >= 64 && b[1] <= 127);      // 100.64.0.0/10 shared address space
+        }
+
+        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+        {
+            if (ip.Equals(System.Net.IPAddress.IPv6Loopback)) return true;  // ::1
+            var b = ip.GetAddressBytes();
+            if ((b[0] & 0xFE) == 0xFC) return true;                         // fc00::/7  ULA
+            if (b[0] == 0xFE && (b[1] & 0xC0) == 0x80) return true;        // fe80::/10 link-local
+        }
+
+        return false;
     }
 }

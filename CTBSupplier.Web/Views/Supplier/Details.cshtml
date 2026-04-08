@@ -48,7 +48,17 @@
             {
                 <dt class="col-sm-2">Website</dt>
                 <dd class="col-sm-10">
-                    <a href="@Model.Supplier.Website" target="_blank" rel="noopener">@Model.Supplier.Website</a>
+                    @{ var ws = Model.Supplier.Website!;
+                       bool wsSafe = ws.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                                  || ws.StartsWith("http://",  StringComparison.OrdinalIgnoreCase); }
+                    @if (wsSafe)
+                    {
+                        <a href="@ws" target="_blank" rel="noopener">@ws</a>
+                    }
+                    else
+                    {
+                        <span>@ws</span>
+                    }
                 </dd>
             }
         </dl>

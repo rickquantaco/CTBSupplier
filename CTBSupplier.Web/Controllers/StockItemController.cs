@@ -171,10 +171,11 @@ public class StockItemController : Controller
 
     private async Task PopulateSupplierDropdownAsync(Guid? selectedId = null)
     {
-        var suppliers = await _db.Suppliers
-            .Where(s => s.IsActive)
-            .OrderBy(s => s.SupplierName)
-            .ToListAsync();
+        var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
+        var query   = _db.Suppliers.Where(s => s.IsActive);
+        if (allowed != null)
+            query = query.Where(s => allowed.Contains(s.SupplierGUID));
+        var suppliers = await query.OrderBy(s => s.SupplierName).ToListAsync();
         ViewBag.Suppliers = new SelectList(suppliers, "SupplierGUID", "SupplierName", selectedId);
     }
 }
