@@ -23,11 +23,38 @@
             <dt class="col-sm-3">Supplier Stock Code</dt>
             <dd class="col-sm-9">@Model.SupplierStockCode</dd>
 
-            <dt class="col-sm-3">Supplier Cost</dt>
-            <dd class="col-sm-9">@Model.SupplierCost.ToString("C")</dd>
-
-            <dt class="col-sm-3">Stock Unit</dt>
-            <dd class="col-sm-9">@Model.StockUnit @Model.UnitOfMeasurementName</dd>
+            <dt class="col-sm-3">Pricing</dt>
+            <dd class="col-sm-9">
+                @{
+                    var tiers = Model.PricingTiers.OrderBy(t => t.SortOrder).ToList();
+                }
+                @if (tiers.Count == 1)
+                {
+                    <span>@tiers[0].SupplierCost.ToString("C") &mdash; @tiers[0].StockUnit @tiers[0].UnitOfMeasurementName</span>
+                }
+                else if (tiers.Count > 1)
+                {
+                    <table class="table table-sm table-bordered mb-0" style="max-width:400px;">
+                        <thead class="table-light">
+                            <tr><th>Cost</th><th>Unit</th><th>Unit of Measurement</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tier in tiers)
+                            {
+                                <tr>
+                                    <td>@tier.SupplierCost.ToString("C")</td>
+                                    <td>@tier.StockUnit</td>
+                                    <td>@tier.UnitOfMeasurementName</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <span class="text-muted">—</span>
+                }
+            </dd>
 
             <dt class="col-sm-3">Category</dt>
             <dd class="col-sm-9">@Model.StockCategoryName</dd>

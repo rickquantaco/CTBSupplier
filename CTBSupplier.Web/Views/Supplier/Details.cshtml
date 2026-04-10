@@ -183,8 +183,8 @@
                     <td>@item.StockDesc</td>
                     <td>@item.BrandName</td>
                     <td>@item.SupplierStockCode</td>
-                    <td>@item.SupplierCost.ToString("C")</td>
-                    <td>@item.StockUnit @item.UnitOfMeasurementName</td>
+                    <td>@(item.PricingTiers.OrderBy(t => t.SortOrder).FirstOrDefault()?.SupplierCost.ToString("C") ?? "—")@(item.PricingTiers.Count > 1 ? " +" : "")</td>
+                    <td>@(item.PricingTiers.OrderBy(t => t.SortOrder).FirstOrDefault() is { } pt ? $"{pt.StockUnit} {pt.UnitOfMeasurementName}" : "—")@(item.PricingTiers.Count > 1 ? " +" : "")</td>
                     <td>@item.StockCategoryName</td>
                     <td>@(item.IsGstApplied ? "Yes" : "No")</td>
                 </tr>
@@ -231,7 +231,7 @@
                         }
                         </a>
                         <p class="mt-2 mb-1 small stock-desc-clamp">@item.StockDesc</p>
-                        <p class="mb-0 fw-semibold small">@item.SupplierCost.ToString("C")</p>
+                        <p class="mb-0 fw-semibold small">@(item.PricingTiers.OrderBy(t => t.SortOrder).FirstOrDefault()?.SupplierCost.ToString("C") ?? "—")@(item.PricingTiers.Count > 1 ? " +" : "")</p>
                         @if (!string.IsNullOrWhiteSpace(item.BrandName))
                         {
                             <p class="mb-0 text-muted small">@item.BrandName</p>

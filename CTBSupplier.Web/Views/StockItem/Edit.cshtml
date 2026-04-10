@@ -1,4 +1,4 @@
-@model CTBSupplier.Web.Models.StockItem
+@model CTBSupplier.Web.Models.StockItemFormViewModel
 @{
     ViewData["Title"] = "Edit Stock Item";
 }
@@ -13,10 +13,9 @@
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="mb-3">
-                <label asp-for="SupplierGUID" class="form-label">Supplier</label>
-                <select asp-for="SupplierGUID" asp-items="ViewBag.Suppliers" class="form-select">
-                    <option value="">-- Select Supplier --</option>
-                </select>
+                <label class="form-label">Supplier</label>
+                <input class="form-control" value="@Model.SupplierName" readonly />
+                <small class="text-muted">Supplier is part of the primary key and cannot be changed.</small>
             </div>
 
             <div class="mb-3">
@@ -40,20 +39,45 @@
                 <input asp-for="SupplierStockCode" class="form-control" />
             </div>
 
-            <div class="row">
-                <div class="col mb-3">
-                    <label asp-for="SupplierCost" class="form-label"></label>
-                    <input asp-for="SupplierCost" class="form-control" />
-                </div>
-                <div class="col mb-3">
-                    <label asp-for="StockUnit" class="form-label"></label>
-                    <input asp-for="StockUnit" class="form-control" />
-                </div>
-            </div>
-
             <div class="mb-3">
-                <label asp-for="UnitOfMeasurementName" class="form-label"></label>
-                <input asp-for="UnitOfMeasurementName" class="form-control" />
+                <label class="form-label fw-semibold">Pricing</label>
+                <div id="pricing-tiers">
+                    @for (int i = 0; i < Model.PricingTiers.Count; i++)
+                    {
+                        <div class="pricing-tier-row border rounded p-2 mb-2" data-index="@i">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-3">
+                                    <label class="form-label small mb-1">Supplier Cost</label>
+                                    <input name="PricingTiers[@i].SupplierCost"
+                                           value="@Model.PricingTiers[i].SupplierCost"
+                                           class="form-control form-control-sm"
+                                           type="number" step="0.01" min="0" />
+                                </div>
+                                <div class="col-3">
+                                    <label class="form-label small mb-1">Stock Unit</label>
+                                    <input name="PricingTiers[@i].StockUnit"
+                                           value="@Model.PricingTiers[i].StockUnit"
+                                           class="form-control form-control-sm"
+                                           type="number" step="any" min="0" />
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label small mb-1">Unit of Measurement</label>
+                                    <input name="PricingTiers[@i].UnitOfMeasurementName"
+                                           value="@Model.PricingTiers[i].UnitOfMeasurementName"
+                                           class="form-control form-control-sm"
+                                           maxlength="50" />
+                                </div>
+                                <div class="col-2">
+                                    @if (i > 0)
+                                    {
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-tier-btn">&times; Remove</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="button" id="addTierBtn" class="btn btn-outline-secondary btn-sm">+ Add Another Tier</button>
             </div>
 
             <div class="mb-3">
@@ -96,23 +120,65 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         (function () {
+            // Image preview
             const input   = document.getElementById('stockMediaUrlInput');
             const preview = document.getElementById('stockMediaPreview');
             const img     = document.getElementById('stockMediaImg');
 
             function updatePreview() {
                 const url = input.value.trim();
-                if (url) {
-                    img.src          = url;
-                    preview.style.display = '';
-                } else {
-                    preview.style.display = 'none';
-                    img.src          = '';
-                }
+                if (url) { img.src = url; preview.style.display = ''; }
+                else     { preview.style.display = 'none'; img.src = ''; }
             }
-
             input.addEventListener('blur',  updatePreview);
             input.addEventListener('paste', () => setTimeout(updatePreview, 0));
+
+            // Dynamic pricing tiers
+            let tierCount = document.querySelectorAll('.pricing-tier-row').length;
+
+            function reindex() {
+                document.querySelectorAll('.pricing-tier-row').forEach((row, i) => {
+                    row.dataset.index = i;
+                    row.querySelectorAll('input').forEach(inp => {
+                        inp.name = inp.name.replace(/PricingTiers\[\d+\]/, `PricingTiers[${i}]`);
+                    });
+                    const removeBtn = row.querySelector('.remove-tier-btn');
+                    if (removeBtn) removeBtn.style.display = i === 0 ? 'none' : '';
+                });
+                tierCount = document.querySelectorAll('.pricing-tier-row').length;
+            }
+
+            document.querySelectorAll('.remove-tier-btn').forEach(btn => {
+                btn.addEventListener('click', () => { btn.closest('.pricing-tier-row').remove(); reindex(); });
+            });
+
+            document.getElementById('addTierBtn').addEventListener('click', function () {
+                const index = tierCount++;
+                const container = document.getElementById('pricing-tiers');
+                const div = document.createElement('div');
+                div.className = 'pricing-tier-row border rounded p-2 mb-2';
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <div class="row g-2 align-items-end">
+                        <div class="col-3">
+                            <label class="form-label small mb-1">Supplier Cost</label>
+                            <input name="PricingTiers[${index}].SupplierCost" value="0" class="form-control form-control-sm" type="number" step="0.01" min="0" />
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label small mb-1">Stock Unit</label>
+                            <input name="PricingTiers[${index}].StockUnit" value="0" class="form-control form-control-sm" type="number" step="any" min="0" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-1">Unit of Measurement</label>
+                            <input name="PricingTiers[${index}].UnitOfMeasurementName" value="" class="form-control form-control-sm" maxlength="50" />
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-tier-btn">&times; Remove</button>
+                        </div>
+                    </div>`;
+                container.appendChild(div);
+                div.querySelector('.remove-tier-btn').addEventListener('click', () => { div.remove(); reindex(); });
+            });
         })();
     </script>
 }

@@ -103,6 +103,7 @@ public class SupplierController : Controller
 
         var total = await query.CountAsync();
         var items = await query
+            .Include(i => i.PricingTiers)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

@@ -17,7 +17,7 @@
     <dd class="col-sm-9">@Model.Supplier?.SupplierName</dd>
 
     <dt class="col-sm-3">Cost</dt>
-    <dd class="col-sm-9">@Model.SupplierCost.ToString("C")</dd>
+    <dd class="col-sm-9">@(Model.PricingTiers.OrderBy(t => t.SortOrder).FirstOrDefault()?.SupplierCost.ToString("C") ?? "—")</dd>
 </dl>
 
 <form asp-action="Delete" asp-route-supplierGuid="@Model.SupplierGUID" asp-route-stockCode="@Model.StockCode" method="post">

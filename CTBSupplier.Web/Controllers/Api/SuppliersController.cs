@@ -285,23 +285,11 @@ public class SuppliersController : ControllerBase
         if (pageSize.HasValue && pageSize.Value > 0)
             pagedQuery = pagedQuery.Take(pageSize.Value);
 
-        var items = await pagedQuery
-            .Select(i => new StockItemDto
-            {
-                SupplierGUID          = i.SupplierGUID,
-                StockCode             = i.StockCode,
-                StockDesc             = i.StockDesc,
-                BrandName             = i.BrandName,
-                SupplierStockCode     = i.SupplierStockCode,
-                SupplierCost          = i.SupplierCost,
-                StockUnit             = i.StockUnit,
-                UnitOfMeasurementName = i.UnitOfMeasurementName,
-                StockCategoryName     = i.StockCategoryName,
-                IsGstApplied          = i.IsGstApplied,
-                StockMediaUrl         = i.StockMediaUrl,
-                DateAddedUtc          = i.DateAddedUtc
-            })
+        var rawItems = await pagedQuery
+            .Include(i => i.PricingTiers)
             .ToListAsync();
+
+        var items = rawItems.Select(i => MapToDto(i)).ToList();
 
         return Ok(new PagedResult<StockItemDto> { Data = items, TotalCount = totalCount });
     }
@@ -360,23 +348,11 @@ public class SuppliersController : ControllerBase
         if (pageSize.HasValue && pageSize.Value > 0)
             pagedQuery = pagedQuery.Take(pageSize.Value);
 
-        var items = await pagedQuery
-            .Select(i => new StockItemDto
-            {
-                SupplierGUID          = i.SupplierGUID,
-                StockCode             = i.StockCode,
-                StockDesc             = i.StockDesc,
-                BrandName             = i.BrandName,
-                SupplierStockCode     = i.SupplierStockCode,
-                SupplierCost          = i.SupplierCost,
-                StockUnit             = i.StockUnit,
-                UnitOfMeasurementName = i.UnitOfMeasurementName,
-                StockCategoryName     = i.StockCategoryName,
-                IsGstApplied          = i.IsGstApplied,
-                StockMediaUrl         = i.StockMediaUrl,
-                DateAddedUtc          = i.DateAddedUtc
-            })
+        var rawItems = await pagedQuery
+            .Include(i => i.PricingTiers)
             .ToListAsync();
+
+        var items = rawItems.Select(i => MapToDto(i)).ToList();
 
         return Ok(new PagedResult<StockItemDto> { Data = items, TotalCount = totalCount });
     }
@@ -411,9 +387,42 @@ public class SuppliersController : ControllerBase
 
         return Ok(new StockItemImageUrlDto
         {
-            SupplierGUID = item.SupplierGUID,
-            StockCode    = item.StockCode,
+            SupplierGUID  = item.SupplierGUID,
+            StockCode     = item.StockCode,
             StockMediaUrl = item.StockMediaUrl
         });
+    }
+
+    // Maps a StockItem (with PricingTiers loaded) to the extended-contract DTO.
+    // Scalar fields always reflect the primary (SortOrder 0) tier for backward compatibility.
+    // PricingTiers is null when there is only one tier; populated with all tiers when there are two or more.
+    private static StockItemDto MapToDto(Models.StockItem i)
+    {
+        var tiers = i.PricingTiers.OrderBy(t => t.SortOrder).ToList();
+        var primary = tiers.FirstOrDefault();
+
+        return new StockItemDto
+        {
+            SupplierGUID          = i.SupplierGUID,
+            StockCode             = i.StockCode,
+            StockDesc             = i.StockDesc,
+            BrandName             = i.BrandName,
+            SupplierStockCode     = i.SupplierStockCode,
+            SupplierCost          = primary?.SupplierCost          ?? 0m,
+            StockUnit             = primary?.StockUnit             ?? 0d,
+            UnitOfMeasurementName = primary?.UnitOfMeasurementName ?? string.Empty,
+            StockCategoryName     = i.StockCategoryName,
+            IsGstApplied          = i.IsGstApplied,
+            StockMediaUrl         = i.StockMediaUrl,
+            DateAddedUtc          = i.DateAddedUtc,
+            PricingTiers          = tiers.Count > 1
+                ? tiers.Select(t => new StockItemUnitsOfMeasurementAndPriceDto
+                  {
+                      SupplierCost          = t.SupplierCost,
+                      StockUnit             = t.StockUnit,
+                      UnitOfMeasurementName = t.UnitOfMeasurementName
+                  }).ToList()
+                : null
+        };
     }
 }

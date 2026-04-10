@@ -14,4 +14,8 @@ public class StockItemDto
     public bool     IsGstApplied          { get; init; }
     public string?  StockMediaUrl         { get; init; }
     public DateTime DateAddedUtc          { get; init; }
+
+    // Null when the item has exactly one pricing tier (the scalar fields above are sufficient).
+    // Populated with ALL tiers (including the primary) when there are two or more.
+    public List<StockItemUnitsOfMeasurementAndPriceDto>? PricingTiers { get; init; }
 }

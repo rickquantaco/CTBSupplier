@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AppUserPermission> AppUserPermissions { get; set; }
     public DbSet<ApiKey> ApiKeys { get; set; }
     public DbSet<AppUserSupplier> AppUserSuppliers { get; set; }
+    public DbSet<StockItemUnitsOfMeasurementAndPrice> StockItemUnitsOfMeasurementAndPrices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,9 +58,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.StockDesc).HasColumnName("stockDesc");
             entity.Property(e => e.BrandName).HasColumnName("brandName");
             entity.Property(e => e.SupplierStockCode).HasColumnName("supplierStockCode");
-            entity.Property(e => e.SupplierCost).HasColumnName("supplierCost");
-            entity.Property(e => e.StockUnit).HasColumnName("stockUnit");
-            entity.Property(e => e.UnitOfMeasurementName).HasColumnName("unitOfMeasurementName");
             entity.Property(e => e.StockCategoryName).HasColumnName("stockCategoryName");
             entity.Property(e => e.IsGstApplied).HasColumnName("isGstApplied");
             entity.Property(e => e.StockMediaUrl).HasColumnName("stockMediaUrl");
@@ -72,6 +70,26 @@ public class ApplicationDbContext : DbContext
                   .WithMany(s => s.StockItems)
                   .HasForeignKey(e => e.SupplierGUID)
                   .HasConstraintName("FK_StockItem_Supplier");
+        });
+
+        // StockItemUnitsOfMeasurementAndPrice: one StockItem has many tiers (cascade delete)
+        modelBuilder.Entity<StockItemUnitsOfMeasurementAndPrice>(entity =>
+        {
+            entity.ToTable("StockItemUnitsOfMeasurementAndPrice");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.SupplierGUID).HasColumnName("supplierGUID");
+            entity.Property(e => e.StockCode).HasColumnName("stockCode");
+            entity.Property(e => e.SupplierCost).HasColumnName("supplierCost");
+            entity.Property(e => e.StockUnit).HasColumnName("stockUnit");
+            entity.Property(e => e.UnitOfMeasurementName).HasColumnName("unitOfMeasurementName");
+            entity.Property(e => e.SortOrder).HasColumnName("sortOrder");
+
+            entity.HasOne(e => e.StockItem)
+                  .WithMany(s => s.PricingTiers)
+                  .HasForeignKey(e => new { e.SupplierGUID, e.StockCode })
+                  .HasConstraintName("FK_StockItemUnitsOfMeasurementAndPrice_StockItem")
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // AppUser

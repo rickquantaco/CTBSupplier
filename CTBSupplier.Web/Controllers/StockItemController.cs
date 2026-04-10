@@ -37,7 +37,9 @@ public class StockItemController : Controller
 
         var allowed = await _access.GetAllowedSupplierGuidsAsync(User);
 
-        IQueryable<StockItem> query = _db.StockItems.Include(i => i.Supplier);
+        IQueryable<StockItem> query = _db.StockItems
+            .Include(i => i.Supplier)
+            .Include(i => i.PricingTiers);
 
         if (allowed != null)
             query = query.Where(i => allowed.Contains(i.SupplierGUID));
@@ -71,6 +73,7 @@ public class StockItemController : Controller
 
         var item = await _db.StockItems
             .Include(i => i.Supplier)
+            .Include(i => i.PricingTiers)
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
         if (item == null) return NotFound();
         return View(item);
@@ -86,22 +89,55 @@ public class StockItemController : Controller
             return View("Forbidden");
 
         await PopulateSupplierDropdownAsync(supplierGuid);
-        return View(new StockItem { SupplierGUID = supplierGuid ?? Guid.Empty });
+        return View(new StockItemFormViewModel { SupplierGUID = supplierGuid ?? Guid.Empty });
     }
 
     // POST: /StockItem/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(StockItem item)
+    public async Task<IActionResult> Create(StockItemFormViewModel vm)
     {
-        if (!await _access.CanAccessSupplierAsync(User, item.SupplierGUID))
+        if (!await _access.CanAccessSupplierAsync(User, vm.SupplierGUID))
             return View("Forbidden");
+
+        var validTiers = vm.PricingTiers
+            .Where(t => !string.IsNullOrWhiteSpace(t.UnitOfMeasurementName))
+            .ToList();
+
+        if (validTiers.Count == 0)
+            ModelState.AddModelError("PricingTiers", "At least one pricing tier with a Unit of Measurement is required.");
 
         if (!ModelState.IsValid)
         {
-            await PopulateSupplierDropdownAsync(item.SupplierGUID);
-            return View(item);
+            await PopulateSupplierDropdownAsync(vm.SupplierGUID);
+            return View(vm);
         }
+
+        var item = new StockItem
+        {
+            SupplierGUID      = vm.SupplierGUID,
+            StockCode         = vm.StockCode,
+            StockDesc         = vm.StockDesc,
+            BrandName         = vm.BrandName,
+            SupplierStockCode = vm.SupplierStockCode,
+            StockCategoryName = vm.StockCategoryName,
+            IsGstApplied      = vm.IsGstApplied,
+            StockMediaUrl     = vm.StockMediaUrl
+        };
+
+        for (int i = 0; i < validTiers.Count; i++)
+        {
+            item.PricingTiers.Add(new StockItemUnitsOfMeasurementAndPrice
+            {
+                SupplierGUID          = vm.SupplierGUID,
+                StockCode             = vm.StockCode,
+                SupplierCost          = validTiers[i].SupplierCost,
+                StockUnit             = validTiers[i].StockUnit,
+                UnitOfMeasurementName = validTiers[i].UnitOfMeasurementName,
+                SortOrder             = i
+            });
+        }
+
         _db.StockItems.Add(item);
         await _db.SaveChangesAsync();
         return RedirectToAction("Details", "Supplier", new { id = item.SupplierGUID });
@@ -114,26 +150,91 @@ public class StockItemController : Controller
             return View("Forbidden");
 
         var item = await _db.StockItems
+            .Include(i => i.Supplier)
+            .Include(i => i.PricingTiers)
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
         if (item == null) return NotFound();
-        await PopulateSupplierDropdownAsync(item.SupplierGUID);
-        return View(item);
+
+        var vm = new StockItemFormViewModel
+        {
+            SupplierGUID      = item.SupplierGUID,
+            SupplierName      = item.Supplier?.SupplierName ?? string.Empty,
+            StockCode         = item.StockCode,
+            StockDesc         = item.StockDesc,
+            BrandName         = item.BrandName,
+            SupplierStockCode = item.SupplierStockCode,
+            StockCategoryName = item.StockCategoryName,
+            IsGstApplied      = item.IsGstApplied,
+            StockMediaUrl     = item.StockMediaUrl,
+            PricingTiers      = item.PricingTiers
+                .OrderBy(t => t.SortOrder)
+                .Select(t => new PricingTierInput
+                {
+                    SupplierCost          = t.SupplierCost,
+                    StockUnit             = t.StockUnit,
+                    UnitOfMeasurementName = t.UnitOfMeasurementName
+                })
+                .ToList()
+        };
+
+        if (vm.PricingTiers.Count == 0)
+            vm.PricingTiers.Add(new PricingTierInput());
+
+        return View(vm);
     }
 
     // POST: /StockItem/Edit
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid supplierGuid, string stockCode, StockItem item)
+    public async Task<IActionResult> Edit(Guid supplierGuid, string stockCode, StockItemFormViewModel vm)
     {
-        if (supplierGuid != item.SupplierGUID || stockCode != item.StockCode) return BadRequest();
+        if (supplierGuid != vm.SupplierGUID || stockCode != vm.StockCode) return BadRequest();
         if (!await _access.CanAccessSupplierAsync(User, supplierGuid))
             return View("Forbidden");
+
+        var validTiers = vm.PricingTiers
+            .Where(t => !string.IsNullOrWhiteSpace(t.UnitOfMeasurementName))
+            .ToList();
+
+        if (validTiers.Count == 0)
+            ModelState.AddModelError("PricingTiers", "At least one pricing tier with a Unit of Measurement is required.");
+
         if (!ModelState.IsValid)
         {
-            await PopulateSupplierDropdownAsync(item.SupplierGUID);
-            return View(item);
+            vm.SupplierName = (await _db.Suppliers.FindAsync(supplierGuid))?.SupplierName ?? string.Empty;
+            return View(vm);
         }
-        _db.Update(item);
+
+        var item = await _db.StockItems
+            .Include(i => i.PricingTiers)
+            .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
+        if (item == null) return NotFound();
+
+        // Update scalar fields
+        item.StockDesc         = vm.StockDesc;
+        item.BrandName         = vm.BrandName;
+        item.SupplierStockCode = vm.SupplierStockCode;
+        item.StockCategoryName = vm.StockCategoryName;
+        item.IsGstApplied      = vm.IsGstApplied;
+        item.StockMediaUrl     = vm.StockMediaUrl;
+
+        // Replace all pricing tiers
+        _db.StockItemUnitsOfMeasurementAndPrices.RemoveRange(item.PricingTiers);
+        item.PricingTiers.Clear();
+
+        for (int i = 0; i < validTiers.Count; i++)
+        {
+            item.PricingTiers.Add(new StockItemUnitsOfMeasurementAndPrice
+            {
+                SupplierGUID          = supplierGuid,
+                StockCode             = stockCode,
+                SupplierCost          = validTiers[i].SupplierCost,
+                StockUnit             = validTiers[i].StockUnit,
+                UnitOfMeasurementName = validTiers[i].UnitOfMeasurementName,
+                SortOrder             = i
+            });
+        }
+
         await _db.SaveChangesAsync();
         return RedirectToAction("Details", "Supplier", new { id = item.SupplierGUID });
     }
@@ -146,6 +247,7 @@ public class StockItemController : Controller
 
         var item = await _db.StockItems
             .Include(i => i.Supplier)
+            .Include(i => i.PricingTiers)
             .FirstOrDefaultAsync(i => i.SupplierGUID == supplierGuid && i.StockCode == stockCode);
         if (item == null) return NotFound();
         return View(item);

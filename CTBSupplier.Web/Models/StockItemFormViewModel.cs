@@ -1,13 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CTBSupplier.Web.Models;
 
-// PK is composite: (SupplierGUID, StockCode) — configured in DbContext via Fluent API
-[Table("StockItem")]
-public class StockItem
+// Used by StockItem Create and Edit views instead of binding directly to the entity.
+public class StockItemFormViewModel
 {
-    // Part of composite PK and FK to Supplier.SupplierGUID
     public Guid SupplierGUID { get; set; }
 
     [Required]
@@ -41,10 +38,23 @@ public class StockItem
     [Display(Name = "Media URL")]
     public string? StockMediaUrl { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime DateAddedUtc { get; set; }
+    // Populated on Edit only — used for display since the supplier cannot be changed.
+    public string SupplierName { get; set; } = string.Empty;
 
-    public Supplier? Supplier { get; set; }
+    // At least one entry is always present (pre-populated with defaults).
+    public List<PricingTierInput> PricingTiers { get; set; } = [new()];
+}
 
-    public ICollection<StockItemUnitsOfMeasurementAndPrice> PricingTiers { get; set; } = new List<StockItemUnitsOfMeasurementAndPrice>();
+// Not marked [Required] on UnitOfMeasurementName — blank rows are filtered server-side.
+public class PricingTierInput
+{
+    [Display(Name = "Supplier Cost")]
+    public decimal SupplierCost { get; set; }
+
+    [Display(Name = "Stock Unit")]
+    public double StockUnit { get; set; }
+
+    [MaxLength(50)]
+    [Display(Name = "Unit of Measurement")]
+    public string UnitOfMeasurementName { get; set; } = string.Empty;
 }
