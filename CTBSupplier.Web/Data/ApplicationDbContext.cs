@@ -84,6 +84,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.StockUnit).HasColumnName("stockUnit");
             entity.Property(e => e.UnitOfMeasurementName).HasColumnName("unitOfMeasurementName");
             entity.Property(e => e.SortOrder).HasColumnName("sortOrder");
+            entity.Property(e => e.Notes).HasColumnName("notes");
 
             entity.HasOne(e => e.StockItem)
                   .WithMany(s => s.PricingTiers)

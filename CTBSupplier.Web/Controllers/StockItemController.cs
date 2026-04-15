@@ -134,6 +134,7 @@ public class StockItemController : Controller
                 SupplierCost          = validTiers[i].SupplierCost,
                 StockUnit             = validTiers[i].StockUnit,
                 UnitOfMeasurementName = validTiers[i].UnitOfMeasurementName,
+                Notes                 = validTiers[i].Notes,
                 SortOrder             = i
             });
         }
@@ -172,7 +173,8 @@ public class StockItemController : Controller
                 {
                     SupplierCost          = t.SupplierCost,
                     StockUnit             = t.StockUnit,
-                    UnitOfMeasurementName = t.UnitOfMeasurementName
+                    UnitOfMeasurementName = t.UnitOfMeasurementName,
+                    Notes                 = t.Notes
                 })
                 .ToList()
         };
@@ -231,6 +233,7 @@ public class StockItemController : Controller
                 SupplierCost          = validTiers[i].SupplierCost,
                 StockUnit             = validTiers[i].StockUnit,
                 UnitOfMeasurementName = validTiers[i].UnitOfMeasurementName,
+                Notes                 = validTiers[i].Notes,
                 SortOrder             = i
             });
         }

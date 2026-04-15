@@ -31,12 +31,16 @@
                 @if (tiers.Count == 1)
                 {
                     <span>@tiers[0].SupplierCost.ToString("C") &mdash; @tiers[0].StockUnit @tiers[0].UnitOfMeasurementName</span>
+                    @if (!string.IsNullOrWhiteSpace(tiers[0].Notes))
+                    {
+                        <div class="text-muted small mt-1">@tiers[0].Notes</div>
+                    }
                 }
                 else if (tiers.Count > 1)
                 {
-                    <table class="table table-sm table-bordered mb-0" style="max-width:400px;">
+                    <table class="table table-sm table-bordered mb-0" style="max-width:560px;">
                         <thead class="table-light">
-                            <tr><th>Cost</th><th>Unit</th><th>Unit of Measurement</th></tr>
+                            <tr><th>Cost</th><th>Unit</th><th>Unit of Measurement</th><th>Notes</th></tr>
                         </thead>
                         <tbody>
                             @foreach (var tier in tiers)
@@ -45,6 +49,7 @@
                                     <td>@tier.SupplierCost.ToString("C")</td>
                                     <td>@tier.StockUnit</td>
                                     <td>@tier.UnitOfMeasurementName</td>
+                                    <td class="text-muted">@tier.Notes</td>
                                 </tr>
                             }
                         </tbody>

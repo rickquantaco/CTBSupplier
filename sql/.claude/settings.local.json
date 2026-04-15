@@ -21,7 +21,10 @@
       "WebFetch(domain:www.woolworths.com.au)",
       "WebFetch(domain:northcoastsmallgoods.com.au)",
       "WebFetch(domain:www.garianfoods.com.au)",
-      "WebFetch(domain:www.perfectitaliano.com.au)"
+      "WebFetch(domain:www.perfectitaliano.com.au)",
+      "Bash(docker build:*)",
+      "Bash(az acr:*)",
+      "Bash(docker push:*)"
     ]
   }
 }

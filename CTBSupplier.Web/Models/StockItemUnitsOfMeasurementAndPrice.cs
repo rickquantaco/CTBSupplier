@@ -29,5 +29,9 @@ public class StockItemUnitsOfMeasurementAndPrice
     // Controls display order; 0 = primary tier
     public int SortOrder { get; set; }
 
+    [MaxLength(100)]
+    [Display(Name = "Price Notes")]
+    public string? Notes { get; set; }
+
     public StockItem? StockItem { get; set; }
 }

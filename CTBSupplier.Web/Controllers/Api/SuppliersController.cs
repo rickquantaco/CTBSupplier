@@ -420,7 +420,8 @@ public class SuppliersController : ControllerBase
                   {
                       SupplierCost          = t.SupplierCost,
                       StockUnit             = t.StockUnit,
-                      UnitOfMeasurementName = t.UnitOfMeasurementName
+                      UnitOfMeasurementName = t.UnitOfMeasurementName,
+                      Notes                 = t.Notes
                   }).ToList()
                 : null
         };

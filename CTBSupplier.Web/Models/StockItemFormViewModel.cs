@@ -57,4 +57,8 @@ public class PricingTierInput
     [MaxLength(50)]
     [Display(Name = "Unit of Measurement")]
     public string UnitOfMeasurementName { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    [Display(Name = "Notes")]
+    public string? Notes { get; set; }
 }
