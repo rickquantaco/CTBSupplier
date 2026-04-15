@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "WebSearch",
+      "WebFetch(domain:www.trumpsproducts.com.au)",
+      "WebFetch(domain:www.trumps.com.au)",
+      "WebFetch(domain:rivianafoodservice.com)",
+      "WebFetch(domain:www.anchorfoodprofessionals.com)",
+      "WebFetch(domain:simplotfoodservice.com.au)",
+      "WebFetch(domain:www.kraftheinz.com)",
+      "WebFetch(domain:www.tgifridays.com.au)",
+      "WebFetch(domain:www.simplotfood.com)",
+      "WebFetch(domain:www.mgfoods.com.au)",
+      "WebFetch(domain:www.centrestatefoods.com.au)",
+      "WebFetch(domain:www.petitstresors.com.au)",
+      "WebFetch(domain:www.igashop.com.au)",
+      "WebFetch(domain:www.anchorfp.com.au)",
+      "WebFetch(domain:www.gfghome.com.au)",
+      "WebFetch(domain:www.brentcorp.com.au)",
+      "WebFetch(domain:www.woolworths.com.au)",
+      "WebFetch(domain:northcoastsmallgoods.com.au)",
+      "WebFetch(domain:www.garianfoods.com.au)",
+      "WebFetch(domain:www.perfectitaliano.com.au)"
+    ]
+  }
+}

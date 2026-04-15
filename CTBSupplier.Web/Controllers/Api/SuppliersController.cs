@@ -413,9 +413,7 @@ public class SuppliersController : ControllerBase
             UnitOfMeasurementName = primary?.UnitOfMeasurementName ?? string.Empty,
             StockCategoryName     = i.StockCategoryName,
             IsGstApplied          = i.IsGstApplied,
-            StockMediaUrl         = i.StockMediaUrl != null && i.StockMediaUrl.Length > 250
-                                        ? i.StockMediaUrl[..250]
-                                        : i.StockMediaUrl,
+            StockMediaUrl         = i.StockMediaUrl,
             DateAddedUtc          = i.DateAddedUtc,
             PricingTiers          = tiers.Count > 1
                 ? tiers.Select(t => new StockItemUnitsOfMeasurementAndPriceDto
